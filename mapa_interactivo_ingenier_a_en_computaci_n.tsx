@@ -23,6 +23,8 @@ import {
   User,
   Trash2,
   HelpCircle,
+  Download,
+  Upload,
   AlertTriangle,
   XCircle,
   AlertCircle,
@@ -564,10 +566,10 @@ export default function App() {
     }
   });
 
-  // Estado de materias (inicialmente limpio para cualquier estudiante nuevo)
+  // Estado de materias
   const [statusMap, setStatusMap] = useState<Record<string, SubjectStatus>>(() => {
     try {
-      const saved = localStorage.getItem('ing_comp_progress');
+      const saved = localStorage.getItem('ing_comp_progress') || localStorage.getItem('ing_comp_2018_progress_v3');
       if (saved) return JSON.parse(saved);
       return {};
     } catch {
@@ -575,10 +577,10 @@ export default function App() {
     }
   });
 
-  // Notas y calificaciones (inicialmente limpio)
+  // Notas y calificaciones
   const [gradesMap, setGradesMap] = useState<Record<string, GradeInfo>>(() => {
     try {
-      const saved = localStorage.getItem('ing_comp_grades');
+      const saved = localStorage.getItem('ing_comp_grades') || localStorage.getItem('ing_comp_2018_grades_v3');
       if (saved) return JSON.parse(saved);
       return {};
     } catch {
@@ -589,8 +591,72 @@ export default function App() {
   // Materia seleccionada (inicialmente null para vista completa)
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  // Modal para confirmar limpieza total
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  // Punto de restauración / Guardado local persistente
+  const [savedCheckpoint, setSavedCheckpoint] = useState<{
+    timestamp: string;
+    studentName?: string;
+    statusMap: Record<string, SubjectStatus>;
+    gradesMap: Record<string, GradeInfo>;
+    collapsedYears?: number[];
+    approvedCount?: number;
+    average?: string;
+  } | null>(() => {
+    try {
+      const saved = localStorage.getItem('ing_comp_saved_checkpoint');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  // Notificación flotante (toast)
+  const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'info' | 'error' } | null>(null);
+
+  const showToast = (text: string, type: 'success' | 'info' | 'error' = 'success') => {
+    setToastMessage({ text, type });
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 4000);
+  };
+
+  // Diálogo modal de confirmación antes de restablecer o limpiar
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    actionText: string;
+    actionColor: 'indigo' | 'emerald' | 'rose';
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    description: '',
+    actionText: '',
+    actionColor: 'indigo',
+    onConfirm: () => {},
+  });
+
+  const openConfirmDialog = (
+    title: string,
+    description: string,
+    actionText: string,
+    actionColor: 'indigo' | 'emerald' | 'rose',
+    onConfirm: () => void
+  ) => {
+    setConfirmDialog({
+      isOpen: true,
+      title,
+      description,
+      actionText,
+      actionColor,
+      onConfirm: () => {
+        onConfirm();
+        setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+      },
+    });
+  };
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [collapsedYears, setCollapsedYears] = useState<number[]>(() => {
     try {
       const saved = localStorage.getItem('ing_comp_collapsed_years');
@@ -794,20 +860,149 @@ export default function App() {
     }
   };
 
-  // Limpiar todos los datos para empezar de cero
-  const clearAllData = () => {
-    setStatusMap({});
-    setGradesMap({});
-    setCollapsedYears([]);
-    setSelectedId(null);
-    setShowResetConfirm(false);
+  // Guardar estado actual en la ranura de guardado local (snapshot)
+  const handleSaveCurrentState = () => {
+    const now = new Date();
+    const formattedDate = `${now.toLocaleDateString()} ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    const checkpoint = {
+      timestamp: formattedDate,
+      studentName,
+      statusMap,
+      gradesMap,
+      collapsedYears,
+      approvedCount: stats.approved,
+      average: stats.average,
+    };
+    try {
+      localStorage.setItem('ing_comp_saved_checkpoint', JSON.stringify(checkpoint));
+      setSavedCheckpoint(checkpoint);
+      showToast(`¡Estado guardado exitosamente! (${stats.approved} aprobadas, promedio ⭐ ${stats.average})`, 'success');
+    } catch (e) {
+      console.error(e);
+      showToast('Error al guardar en el navegador', 'error');
+    }
   };
 
-  // Cargar plantilla de datos de ejemplo
-  const loadSampleData = () => {
-    setStatusMap(SAMPLE_DEMO_STATUS_MAP);
-    setGradesMap(SAMPLE_DEMO_GRADES_MAP);
-    setShowResetConfirm(false);
+  // Restaurar estado guardado (pregunta antes de hacerlo)
+  const handleRestoreSavedStatePrompt = () => {
+    if (!savedCheckpoint) {
+      openConfirmDialog(
+        '¿Restablecer notas y materias?',
+        'Aún no guardaste un estado personal con el botón "Guardar". ¿Deseás cargar la plantilla oficial de ejemplo (Plan 3° Año, promedio 8.50)?',
+        'Sí, Cargar Plantilla',
+        'indigo',
+        () => {
+          setStatusMap(SAMPLE_DEMO_STATUS_MAP);
+          setGradesMap(SAMPLE_DEMO_GRADES_MAP);
+          showToast('Plantilla oficial de ejemplo cargada con éxito.');
+        }
+      );
+      return;
+    }
+
+    openConfirmDialog(
+      '¿Restablecer al estado guardado?',
+      `Se recuperará tu guardado del ${savedCheckpoint.timestamp} (${savedCheckpoint.approvedCount || 0} materias aprobadas, promedio ⭐ ${savedCheckpoint.average || '0.00'}). Tus cambios actuales no guardados se reemplazarán.`,
+      'Sí, Restaurar Guardado',
+      'indigo',
+      () => {
+        setStatusMap(savedCheckpoint.statusMap || {});
+        setGradesMap(savedCheckpoint.gradesMap || {});
+        if (savedCheckpoint.studentName !== undefined) setStudentName(savedCheckpoint.studentName);
+        if (savedCheckpoint.collapsedYears) setCollapsedYears(savedCheckpoint.collapsedYears);
+        showToast(`¡Estado restaurado al guardado del ${savedCheckpoint.timestamp}!`);
+      }
+    );
+  };
+
+  // Cargar plantilla de ejemplo (pregunta antes de hacerlo)
+  const handleLoadSampleDataPrompt = () => {
+    openConfirmDialog(
+      '¿Cargar plantilla de ejemplo?',
+      'Esta acción cargará una demostración con 14 materias aprobadas, 3 regulares y promedio 8.50. Se reemplazarán los datos que tengas actualmente en pantalla.',
+      'Sí, Cargar Ejemplo',
+      'indigo',
+      () => {
+        setStatusMap(SAMPLE_DEMO_STATUS_MAP);
+        setGradesMap(SAMPLE_DEMO_GRADES_MAP);
+        showToast('Plantilla de ejemplo cargada correctamente.');
+      }
+    );
+  };
+
+  // Limpiar todos los datos para empezar de cero (pregunta antes de hacerlo)
+  const handleClearAllDataPrompt = () => {
+    openConfirmDialog(
+      '¿Reiniciar y limpiar todo el avance?',
+      'Se borrarán todas las materias aprobadas, regulares y calificaciones cargadas, dejando todo en estado Pendiente para comenzar de cero.',
+      'Sí, Limpiar Todo',
+      'rose',
+      () => {
+        setStatusMap({});
+        setGradesMap({});
+        setCollapsedYears([]);
+        setSelectedId(null);
+        showToast('El mapa de materias y notas ha sido reiniciado a cero.', 'info');
+      }
+    );
+  };
+
+  // Exportar respaldo como archivo JSON
+  const handleExportJson = () => {
+    const data = {
+      appName: 'PlanDeEstudios_IngenieriaEnComputacion',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      studentName,
+      statusMap,
+      gradesMap,
+      collapsedYears,
+      stats: {
+        approved: stats.approved,
+        average: stats.average,
+      },
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `plan_estudios_${studentName ? studentName.toLowerCase().replace(/\s+/g, '_') : 'alumno'}_backup.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Archivo de respaldo descargado correctamente.');
+  };
+
+  // Importar respaldo desde archivo JSON
+  const handleImportJson = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const parsed = JSON.parse(event.target?.result as string);
+        if (parsed && (parsed.statusMap || parsed.gradesMap)) {
+          openConfirmDialog(
+            '¿Cargar archivo de respaldo?',
+            `Se importarán los datos del archivo "${file.name}". Se sobreescribirán las notas y materias actuales.`,
+            'Sí, Cargar Archivo',
+            'indigo',
+            () => {
+              if (parsed.statusMap) setStatusMap(parsed.statusMap);
+              if (parsed.gradesMap) setGradesMap(parsed.gradesMap);
+              if (parsed.studentName) setStudentName(parsed.studentName);
+              if (parsed.collapsedYears) setCollapsedYears(parsed.collapsedYears);
+              showToast(`¡Respaldo importado con éxito desde "${file.name}"!`);
+            }
+          );
+        } else {
+          showToast('El archivo no tiene el formato de respaldo esperado.', 'error');
+        }
+      } catch {
+        showToast('Error al leer el archivo JSON.', 'error');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   };
 
   // Estadísticas globales y cálculo de promedio
@@ -1124,7 +1319,14 @@ export default function App() {
             </div>
 
             {/* Botones de acción móvil */}
-            <div className="flex items-center gap-2 xl:hidden">
+            <div className="flex items-center gap-1.5 xl:hidden">
+              <button
+                onClick={handleSaveCurrentState}
+                className="p-1.5 rounded-lg bg-slate-800 border border-slate-700 text-emerald-400 hover:text-white transition"
+                title="Guardar estado actual"
+              >
+                <Save className="w-4 h-4" />
+              </button>
               <button
                 onClick={() => setShowGradesModal(true)}
                 className="px-2.5 py-1.5 rounded-lg bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 text-xs font-semibold flex items-center gap-1.5"
@@ -1182,7 +1384,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* BOTONES PRINCIPALES: Mis Notas & Estrategia */}
+          {/* BOTONES PRINCIPALES: Mis Notas, Guardar & Estrategia */}
           <div className="flex items-center gap-2.5">
             {/* BOTÓN MIS NOTAS (DESTACADO SEGÚN PEDIDO) */}
             <button
@@ -1195,6 +1397,16 @@ export default function App() {
               <span className="px-1.5 py-0.5 rounded-md bg-white/20 text-white font-mono text-[11px] font-bold">
                 {stats.countGrades > 0 ? `⭐ ${stats.average}` : 'Cargar'}
               </span>
+            </button>
+
+            {/* BOTÓN GUARDAR ESTADO */}
+            <button
+              onClick={handleSaveCurrentState}
+              className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition active:scale-95 shadow"
+              title="Guardar una copia de respaldo de tu estado actual de notas"
+            >
+              <Save className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Guardar</span>
             </button>
 
             {/* BOTÓN ESTRATEGIA & MESAS */}
@@ -1314,7 +1526,7 @@ export default function App() {
             )}
           </div>
 
-          {/* Opciones visuales */}
+          {/* Opciones visuales y Gestión rápida */}
           <div className="flex items-center gap-3 text-xs">
             <label className="flex items-center gap-1.5 text-slate-300 cursor-pointer select-none">
               <input
@@ -1326,13 +1538,28 @@ export default function App() {
               <span className="text-[11px]">Líneas de Correlatividad</span>
             </label>
 
+            <div className="h-3 w-px bg-slate-800" />
+
             <button
-              onClick={() => setShowResetConfirm(true)}
-              className="text-[11px] text-rose-400 hover:text-rose-300 flex items-center gap-1 hover:underline ml-1 font-medium"
+              onClick={handleRestoreSavedStatePrompt}
+              className="text-[11px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1 hover:underline font-medium"
+              title={
+                savedCheckpoint
+                  ? `Restablecer al guardado del ${savedCheckpoint.timestamp}`
+                  : 'Restablecer notas / Cargar plantilla'
+              }
+            >
+              <RotateCcw className="w-3 h-3" />
+              Restablecer
+            </button>
+
+            <button
+              onClick={handleClearAllDataPrompt}
+              className="text-[11px] text-rose-400 hover:text-rose-300 flex items-center gap-1 hover:underline font-medium"
               title="Limpiar y reiniciar todo el avance para empezar desde cero"
             >
               <Trash2 className="w-3 h-3" />
-              Limpiar Avance
+              Limpiar
             </button>
           </div>
         </div>
@@ -2010,7 +2237,7 @@ export default function App() {
                 </span>
               </div>
               <button
-                onClick={loadSampleData}
+                onClick={handleLoadSampleDataPrompt}
                 className="shrink-0 ml-3 text-[11px] text-cyan-300 hover:text-cyan-200 underline font-medium"
                 title="Cargar datos de ejemplo de 3° año"
               >
@@ -2150,30 +2377,80 @@ export default function App() {
 
             {/* Footer con Acciones */}
             <div className="p-4 bg-slate-950/80 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center gap-2.5">
                 <button
-                  onClick={() => setShowResetConfirm(true)}
-                  className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1.5 hover:underline font-medium"
+                  onClick={handleSaveCurrentState}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 text-xs font-semibold flex items-center gap-1.5 transition active:scale-95 shadow"
+                  title="Guardar el estado de notas actual en este navegador"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  Limpiar todas las notas y avance
+                  <Save className="w-3.5 h-3.5 text-emerald-400" />
+                  Guardar Estado
                 </button>
+
                 <button
-                  onClick={loadSampleData}
-                  className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 hover:underline"
-                  title="Carga una plantilla de ejemplo para ver cómo funciona"
+                  onClick={handleRestoreSavedStatePrompt}
+                  className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 hover:underline font-medium"
+                  title={
+                    savedCheckpoint
+                      ? `Restablecer al guardado del ${savedCheckpoint.timestamp}`
+                      : 'Restablecer notas / Cargar plantilla'
+                  }
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
-                  Cargar plantilla de ejemplo
+                  Restablecer
+                </button>
+
+                <button
+                  onClick={handleLoadSampleDataPrompt}
+                  className="text-xs text-slate-300 hover:text-white flex items-center gap-1.5 hover:underline"
+                  title="Carga una plantilla de ejemplo para ver cómo funciona"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  Cargar Ejemplo
+                </button>
+
+                <button
+                  onClick={handleClearAllDataPrompt}
+                  className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1.5 hover:underline font-medium ml-1"
+                  title="Borra todas las notas y estados cargados para dejar el plan en blanco"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Limpiar Todo
+                </button>
+
+                <div className="h-4 w-px bg-slate-800 hidden sm:block" />
+
+                <button
+                  onClick={handleExportJson}
+                  className="text-xs text-slate-400 hover:text-slate-200 flex items-center gap-1.5 hover:underline"
+                  title="Descargar copia de seguridad en archivo .json"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Exportar
+                </button>
+
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="text-xs text-slate-400 hover:text-slate-200 flex items-center gap-1.5 hover:underline"
+                  title="Subir archivo .json de respaldo"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  Importar
                 </button>
               </div>
 
-              <button
-                onClick={() => setShowGradesModal(false)}
-                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md transition"
-              >
-                Guardar y Cerrar
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    handleSaveCurrentState();
+                    setShowGradesModal(false);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md transition flex items-center gap-1.5 active:scale-95"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  Guardar y Cerrar
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -2406,43 +2683,90 @@ export default function App() {
         </div>
       )}
       {/* ============================================================ */}
-      {/* MODAL 4: CONFIRMACIÓN PARA REINICIAR / LIMPIAR TODO */}
+      {/* MODAL UNIVERSAL DE CONFIRMACIÓN (PREGUNTA ANTES DE ACTUAR) */}
       {/* ============================================================ */}
-      {showResetConfirm && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      {confirmDialog.isOpen && (
+        <div className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-slate-900 border border-slate-700/80 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0">
-                <AlertTriangle className="w-5 h-5" />
+              <div
+                className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border ${
+                  confirmDialog.actionColor === 'rose'
+                    ? 'bg-rose-500/20 border-rose-500/30 text-rose-400'
+                    : confirmDialog.actionColor === 'emerald'
+                    ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
+                    : 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400'
+                }`}
+              >
+                <AlertTriangle className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-white">¿Reiniciar todo el avance?</h3>
-                <p className="text-xs text-slate-400">Esta acción dejará el mapa en blanco.</p>
+                <h3 className="text-base font-bold text-white">{confirmDialog.title}</h3>
+                <p className="text-xs text-slate-400">Confirmación requerida</p>
               </div>
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Se restablecerán todas las materias a estado <strong>Pendiente</strong> y se borrarán todas las notas cargadas para que comiences desde cero con tu propio plan.
+            <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-line">
+              {confirmDialog.description}
             </p>
 
-            <div className="pt-2 flex items-center justify-end gap-2">
+            <div className="pt-3 flex items-center justify-end gap-2.5">
               <button
-                onClick={() => setShowResetConfirm(false)}
-                className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition"
+                onClick={() => setConfirmDialog((prev) => ({ ...prev, isOpen: false }))}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold transition"
               >
                 Cancelar
               </button>
               <button
-                onClick={clearAllData}
-                className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold transition flex items-center gap-1.5"
+                onClick={confirmDialog.onConfirm}
+                className={`px-4 py-2 rounded-xl text-white text-xs font-semibold shadow-md transition flex items-center gap-1.5 ${
+                  confirmDialog.actionColor === 'rose'
+                    ? 'bg-rose-600 hover:bg-rose-500 shadow-rose-600/30'
+                    : confirmDialog.actionColor === 'emerald'
+                    ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30'
+                    : 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/30'
+                }`}
               >
-                <Trash2 className="w-3.5 h-3.5" />
-                Sí, Limpiar Todo
+                <Check className="w-4 h-4" />
+                {confirmDialog.actionText}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* NOTIFICACIÓN FLOTANTE (TOAST) */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-[70] animate-in slide-in-from-bottom-3 fade-in duration-200">
+          <div
+            className={`px-4 py-3 rounded-xl border shadow-2xl flex items-center gap-3 text-xs font-medium backdrop-blur-md ${
+              toastMessage.type === 'success'
+                ? 'bg-emerald-950/90 text-emerald-200 border-emerald-500/40 shadow-emerald-950/50'
+                : toastMessage.type === 'error'
+                ? 'bg-rose-950/90 text-rose-200 border-rose-500/40 shadow-rose-950/50'
+                : 'bg-slate-900/90 text-indigo-200 border-indigo-500/40 shadow-slate-950/50'
+            }`}
+          >
+            {toastMessage.type === 'success' ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            ) : toastMessage.type === 'error' ? (
+              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+            ) : (
+              <Info className="w-4 h-4 text-indigo-400 shrink-0" />
+            )}
+            <span>{toastMessage.text}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Input oculto para importación de respaldo JSON */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleImportJson}
+        accept=".json"
+        className="hidden"
+      />
     </div>
   );
 }
