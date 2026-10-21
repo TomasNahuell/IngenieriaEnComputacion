@@ -19,11 +19,40 @@ import {
   GraduationCap,
   X,
   Eye,
-  HelpCircle
+  HelpCircle,
+  AlertTriangle,
+  XCircle,
+  AlertCircle,
+  TrendingUp,
+  BarChart3,
+  FileSpreadsheet,
+  Zap,
+  Target,
+  Edit3,
+  Flame,
+  Check,
+  Calendar,
+  Save,
+  Share2
 } from 'lucide-react';
 
+// Tipos de estado posibles para una materia
+export type SubjectStatus =
+  | 'pendiente'
+  | 'en_curso'
+  | 'condicional'
+  | 'regularizada'
+  | 'aprobada'
+  | 'libre';
+
+export interface GradeInfo {
+  grade?: number;
+  statusText: string;
+  origin: string;
+}
+
 // ==========================================
-// DATOS DEL PLAN DE ESTUDIOS 2018
+// DATOS DEL PLAN DE ESTUDIOS 2018 (ACTUALIZADOS)
 // ==========================================
 const SUBJECTS_DATA = [
   // PRIMER AÑO
@@ -77,9 +106,9 @@ const SUBJECTS_DATA = [
     year: 1,
     period: '2°C',
     name: 'Sistemas de Representación',
-    cursarReg: ['IC111'],
+    cursarReg: [],
     cursarApr: [],
-    rendirApr: ['IC111'],
+    rendirApr: [],
   },
   {
     id: 'IC122',
@@ -115,18 +144,18 @@ const SUBJECTS_DATA = [
     year: 2,
     period: '1°C',
     name: 'Fundamentos de Computación I',
-    cursarReg: ['IC111'],
+    cursarReg: ['IC111', 'IC103'],
     cursarApr: [],
-    rendirApr: ['IC111'],
+    rendirApr: ['IC111', 'IC103'],
   },
   {
     id: 'IC221',
     year: 2,
     period: '2°C',
     name: 'Arquitectura de Computadoras',
-    cursarReg: ['IC111'],
-    cursarApr: [],
-    rendirApr: ['IC111'],
+    cursarReg: ['IC112'],
+    cursarApr: ['IC111'],
+    rendirApr: ['IC111', 'IC112'],
   },
   {
     id: 'IC222',
@@ -142,9 +171,9 @@ const SUBJECTS_DATA = [
     year: 2,
     period: '2°C',
     name: 'Electricidad y Electromagnetismo',
-    cursarReg: ['IC211', 'IC212'],
+    cursarReg: ['IC212', 'IC102', 'IC101'],
     cursarApr: [],
-    rendirApr: ['IC211', 'IC212'],
+    rendirApr: ['IC212', 'IC102', 'IC101'],
   },
   {
     id: 'IC224',
@@ -164,16 +193,16 @@ const SUBJECTS_DATA = [
     name: 'Probabilidad y Estadística',
     cursarReg: ['IC211'],
     cursarApr: ['IC101', 'IC102'],
-    rendirApr: ['IC101', 'IC102', 'IC211'],
+    rendirApr: ['IC211'],
   },
   {
     id: 'IC312',
     year: 3,
     period: '1°C',
     name: 'Circuitos Eléctricos',
-    cursarReg: ['IC223'],
-    cursarApr: ['IC101', 'IC102'],
-    rendirApr: ['IC101', 'IC102', 'IC223'],
+    cursarReg: ['IC223', 'IC222'],
+    cursarApr: ['IC102', 'IC101', 'IC211'],
+    rendirApr: ['IC223', 'IC222'],
   },
   {
     id: 'IC313',
@@ -182,7 +211,7 @@ const SUBJECTS_DATA = [
     name: 'Materiales y Dispositivos Electrónicos',
     cursarReg: ['IC122', 'IC223'],
     cursarApr: ['IC101', 'IC102'],
-    rendirApr: ['IC101', 'IC102', 'IC122', 'IC223'],
+    rendirApr: ['IC122', 'IC223'],
   },
   {
     id: 'IC314',
@@ -200,16 +229,16 @@ const SUBJECTS_DATA = [
     name: 'Sistemas Operativos',
     cursarReg: ['IC103', 'IC221'],
     cursarApr: ['IC111'],
-    rendirApr: ['IC111', 'IC103', 'IC221'],
+    rendirApr: ['IC103', 'IC221'],
   },
   {
     id: 'IC321',
     year: 3,
     period: '2°C',
     name: 'Electrónica Analógica',
-    cursarReg: ['IC313'],
+    cursarReg: ['IC313', 'IC112', 'IC312'],
     cursarApr: [],
-    rendirApr: ['IC313'],
+    rendirApr: ['IC313', 'IC312', 'IC112'],
   },
   {
     id: 'IC322',
@@ -218,7 +247,7 @@ const SUBJECTS_DATA = [
     name: 'Fundamentos de Computación II',
     cursarReg: ['IC213'],
     cursarApr: ['IC103', 'IC111'],
-    rendirApr: ['IC103', 'IC111', 'IC213'],
+    rendirApr: ['IC213'],
   },
   {
     id: 'IC323',
@@ -227,7 +256,7 @@ const SUBJECTS_DATA = [
     name: 'Comunicación de Datos',
     cursarReg: ['IC222', 'IC223'],
     cursarApr: ['IC101', 'IC102'],
-    rendirApr: ['IC101', 'IC102', 'IC222', 'IC223'],
+    rendirApr: ['IC222', 'IC223'],
   },
   {
     id: 'IC324',
@@ -236,7 +265,7 @@ const SUBJECTS_DATA = [
     name: 'Señales y Sistemas',
     cursarReg: ['IC222'],
     cursarApr: ['IC101', 'IC102'],
-    rendirApr: ['IC101', 'IC102', 'IC222'],
+    rendirApr: ['IC222'],
   },
 
   // CUARTO AÑO
@@ -248,7 +277,6 @@ const SUBJECTS_DATA = [
     cursarReg: ['IC321'],
     cursarApr: ['IC211', 'IC212', 'IC213'],
     rendirApr: ['IC211', 'IC212', 'IC213', 'IC321'],
-    generalRuleNote: 'Requiere todo 1°C de 2° Año aprobado',
   },
   {
     id: 'IC412',
@@ -257,8 +285,7 @@ const SUBJECTS_DATA = [
     name: 'Redes I',
     cursarReg: ['IC221', 'IC323'],
     cursarApr: ['IC211', 'IC212', 'IC213'],
-    rendirApr: ['IC211', 'IC212', 'IC213', 'IC221', 'IC323'],
-    generalRuleNote: 'Requiere todo 1°C de 2° Año aprobado',
+    rendirApr: ['IC213', 'IC221', 'IC323'],
   },
   {
     id: 'IC413',
@@ -267,28 +294,25 @@ const SUBJECTS_DATA = [
     name: 'Ingeniería de Software I',
     cursarReg: ['IC224', 'IC311', 'IC314'],
     cursarApr: ['IC211', 'IC212', 'IC213'],
-    rendirApr: ['IC211', 'IC212', 'IC213', 'IC224', 'IC311', 'IC314'],
-    generalRuleNote: 'Requiere todo 1°C de 2° Año aprobado',
+    rendirApr: ['IC211', 'IC212', 'IC224', 'IC311', 'IC314'],
   },
   {
     id: 'IC414',
     year: 4,
     period: '1°C',
-    name: 'Base de Datos',
+    name: 'Bases de Datos',
     cursarReg: ['IC224'],
     cursarApr: ['IC211', 'IC212', 'IC213'],
-    rendirApr: ['IC211', 'IC212', 'IC213', 'IC224'],
-    generalRuleNote: 'Requiere todo 1°C de 2° Año aprobado',
+    rendirApr: ['IC211', 'IC212', 'IC224'],
   },
   {
     id: 'IC415',
     year: 4,
     period: '1°C',
     name: 'Inteligencia Computacional',
-    cursarReg: ['IC224', 'IC322', 'IC411'],
+    cursarReg: ['IC224', 'IC322', 'IC311', 'IC324'],
     cursarApr: ['IC211', 'IC212', 'IC213'],
-    rendirApr: ['IC211', 'IC212', 'IC213', 'IC224', 'IC322', 'IC411'],
-    generalRuleNote: 'Requiere todo 1°C de 2° Año aprobado',
+    rendirApr: ['IC224', 'IC322', 'IC211', 'IC212', 'IC324', 'IC311'],
   },
   {
     id: 'IC421',
@@ -297,8 +321,7 @@ const SUBJECTS_DATA = [
     name: 'Redes II',
     cursarReg: ['IC412'],
     cursarApr: ['IC221', 'IC222', 'IC223', 'IC224', 'IC323'],
-    rendirApr: ['IC221', 'IC222', 'IC223', 'IC224', 'IC323', 'IC412'],
-    generalRuleNote: 'Requiere todo 2°C de 2° Año aprobado',
+    rendirApr: ['IC224', 'IC412'],
   },
   {
     id: 'IC422',
@@ -307,8 +330,7 @@ const SUBJECTS_DATA = [
     name: 'Sistemas Embebidos',
     cursarReg: ['IC323', 'IC411'],
     cursarApr: ['IC221', 'IC222', 'IC223', 'IC224'],
-    rendirApr: ['IC221', 'IC222', 'IC223', 'IC224', 'IC323', 'IC411'],
-    generalRuleNote: 'Requiere todo 2°C de 2° Año aprobado',
+    rendirApr: ['IC224', 'IC411', 'IC221', 'IC323'],
   },
   {
     id: 'IC423',
@@ -317,18 +339,16 @@ const SUBJECTS_DATA = [
     name: 'Ingeniería de Software II',
     cursarReg: ['IC413'],
     cursarApr: ['IC221', 'IC222', 'IC223', 'IC224'],
-    rendirApr: ['IC221', 'IC222', 'IC223', 'IC224', 'IC413'],
-    generalRuleNote: 'Requiere todo 2°C de 2° Año aprobado',
+    rendirApr: ['IC221', 'IC222', 'IC223', 'IC413'],
   },
   {
     id: 'IC424',
     year: 4,
     period: '2°C',
     name: 'Sistemas de Control y Automatización',
-    cursarReg: ['IC324', 'IC411'],
+    cursarReg: ['IC324', 'IC411', 'IC312', 'IC321'],
     cursarApr: ['IC221', 'IC222', 'IC223', 'IC224'],
-    rendirApr: ['IC221', 'IC222', 'IC223', 'IC224', 'IC324', 'IC411'],
-    generalRuleNote: 'Requiere todo 2°C de 2° Año aprobado',
+    rendirApr: ['IC224', 'IC324', 'IC411', 'IC312', 'IC321', 'IC221'],
   },
 
   // QUINTO AÑO
@@ -339,8 +359,7 @@ const SUBJECTS_DATA = [
     name: 'Internet de las Cosas, Sensores y Redes',
     cursarReg: ['IC421', 'IC422'],
     cursarApr: ['IC311', 'IC312', 'IC313', 'IC314', 'IC315', 'IC411', 'IC412'],
-    rendirApr: ['IC311', 'IC312', 'IC313', 'IC314', 'IC315', 'IC411', 'IC412', 'IC421', 'IC422'],
-    generalRuleNote: 'Requiere todo 1°C de 3° Año aprobado',
+    rendirApr: ['IC311', 'IC312', 'IC313', 'IC314', 'IC315', 'IC421', 'IC422'],
   },
   {
     id: 'IC512',
@@ -350,7 +369,6 @@ const SUBJECTS_DATA = [
     cursarReg: ['IC324', 'IC422'],
     cursarApr: ['IC311', 'IC312', 'IC313', 'IC314', 'IC315'],
     rendirApr: ['IC311', 'IC312', 'IC313', 'IC314', 'IC315', 'IC324', 'IC422'],
-    generalRuleNote: 'Requiere todo 1°C de 3° Año aprobado',
   },
   {
     id: 'IC513',
@@ -360,17 +378,15 @@ const SUBJECTS_DATA = [
     cursarReg: [],
     cursarApr: ['IC311', 'IC312', 'IC313', 'IC314', 'IC315'],
     rendirApr: ['IC311', 'IC312', 'IC313', 'IC314', 'IC315'],
-    generalRuleNote: 'Requiere todo 1°C de 3° Año aprobado',
   },
   {
     id: 'IC514',
     year: 5,
-    period: '1°C',
+    period: '2°C',
     name: 'Higiene, Seguridad y Medio Ambiente',
     cursarReg: [],
-    cursarApr: ['IC311', 'IC312', 'IC313', 'IC314', 'IC315'],
-    rendirApr: ['IC311', 'IC312', 'IC313', 'IC314', 'IC315'],
-    generalRuleNote: 'Requiere todo 1°C de 3° Año aprobado',
+    cursarApr: ['IC321', 'IC322', 'IC323', 'IC324'],
+    rendirApr: ['IC321', 'IC322', 'IC323', 'IC324'],
   },
   {
     id: 'IC515',
@@ -379,8 +395,7 @@ const SUBJECTS_DATA = [
     name: 'Gestión de Proyectos',
     cursarReg: ['IC413'],
     cursarApr: ['IC311', 'IC312', 'IC313', 'IC314', 'IC315'],
-    rendirApr: ['IC311', 'IC312', 'IC313', 'IC314', 'IC315', 'IC413'],
-    generalRuleNote: 'Requiere todo 1°C de 3° Año aprobado',
+    rendirApr: ['IC312', 'IC313', 'IC315', 'IC413'],
   },
   {
     id: 'IC521',
@@ -390,7 +405,6 @@ const SUBJECTS_DATA = [
     cursarReg: [],
     cursarApr: ['IC321', 'IC322', 'IC323', 'IC324'],
     rendirApr: ['IC321', 'IC322', 'IC323', 'IC324'],
-    generalRuleNote: 'Requiere todo 2°C de 3° Año aprobado',
   },
   {
     id: 'IC522',
@@ -400,28 +414,25 @@ const SUBJECTS_DATA = [
     cursarReg: ['IC422', 'IC515'],
     cursarApr: ['IC321', 'IC322', 'IC323', 'IC324'],
     rendirApr: ['IC321', 'IC322', 'IC323', 'IC324', 'IC422', 'IC515'],
-    generalRuleNote: 'Requiere todo 2°C de 3° Año aprobado',
   },
   {
     id: 'ICO51',
     year: 5,
     period: '2°C',
-    name: 'Optativa I (Ver columna Optativas)',
+    name: 'Optativa I (Elegir de columna)',
     cursarReg: [],
     cursarApr: ['IC321', 'IC322', 'IC323', 'IC324'],
     rendirApr: ['IC321', 'IC322', 'IC323', 'IC324'],
-    generalRuleNote: 'Se elige de la lista de Optativas',
     isPlaceholderOptativa: true,
   },
   {
     id: 'ICO52',
     year: 5,
     period: '2°C',
-    name: 'Optativa II (Ver columna Optativas)',
+    name: 'Optativa II (Elegir de columna)',
     cursarReg: [],
     cursarApr: ['IC321', 'IC322', 'IC323', 'IC324'],
     rendirApr: ['IC321', 'IC322', 'IC323', 'IC324'],
-    generalRuleNote: 'Se elige de la lista de Optativas',
     isPlaceholderOptativa: true,
   },
 
@@ -434,7 +445,6 @@ const SUBJECTS_DATA = [
     cursarReg: ['IC414', 'IC423', 'IC511'],
     cursarApr: ['IC321', 'IC322', 'IC323', 'IC324'],
     rendirApr: ['IC321', 'IC322', 'IC323', 'IC324', 'IC414', 'IC423', 'IC511'],
-    generalRuleNote: 'Optativa • Requiere todo 2°C de 3° Año aprobado',
     isOptativa: true,
   },
   {
@@ -445,7 +455,6 @@ const SUBJECTS_DATA = [
     cursarReg: [],
     cursarApr: ['IC321', 'IC322', 'IC323', 'IC324'],
     rendirApr: ['IC321', 'IC322', 'IC323', 'IC324'],
-    generalRuleNote: 'Optativa • Requiere todo 2°C de 3° Año aprobado',
     isOptativa: true,
   },
   {
@@ -456,7 +465,6 @@ const SUBJECTS_DATA = [
     cursarReg: ['IC421', 'IC424'],
     cursarApr: ['IC321', 'IC322', 'IC323', 'IC324'],
     rendirApr: ['IC321', 'IC322', 'IC323', 'IC324', 'IC421', 'IC424'],
-    generalRuleNote: 'Optativa • Requiere todo 2°C de 3° Año aprobado',
     isOptativa: true,
   },
   {
@@ -467,7 +475,6 @@ const SUBJECTS_DATA = [
     cursarReg: ['IC422'],
     cursarApr: ['IC321', 'IC322', 'IC323', 'IC324'],
     rendirApr: ['IC321', 'IC322', 'IC323', 'IC324', 'IC422'],
-    generalRuleNote: 'Optativa • Requiere todo 2°C de 3° Año aprobado',
     isOptativa: true,
   },
   {
@@ -478,7 +485,6 @@ const SUBJECTS_DATA = [
     cursarReg: ['IC512'],
     cursarApr: ['IC321', 'IC322', 'IC323', 'IC324'],
     rendirApr: ['IC321', 'IC322', 'IC323', 'IC324', 'IC512'],
-    generalRuleNote: 'Optativa • Requiere todo 2°C de 3° Año aprobado',
     isOptativa: true,
   },
   {
@@ -489,7 +495,6 @@ const SUBJECTS_DATA = [
     cursarReg: [],
     cursarApr: ['IC321', 'IC322', 'IC323', 'IC324'],
     rendirApr: ['IC321', 'IC322', 'IC323', 'IC324'],
-    generalRuleNote: 'Optativa • Requiere todo 2°C de 3° Año aprobado',
     isOptativa: true,
   },
 ];
@@ -500,100 +505,156 @@ const YEAR_COLUMNS = [
   { year: 3, title: '3° Año', subtitle: 'Tecnologías Básicas' },
   { year: 4, title: '4° Año', subtitle: 'Especialización' },
   { year: 5, title: '5° Año', subtitle: 'Integración y Práctica' },
-  { year: 6, title: 'Optativas', subtitle: 'Elegir 2 asignaturas (2°C)' },
+  { year: 6, title: 'Optativas', subtitle: 'Elegir 2 materias (2°C)' },
 ];
 
+// DATOS INICIALES REALES DEL ALUMNO (TOMÁS)
+const INITIAL_STATUS_MAP: Record<string, SubjectStatus> = {
+  IC101: 'aprobada',
+  IC102: 'aprobada',
+  IC103: 'aprobada',
+  IC111: 'aprobada',
+  IC112: 'aprobada',
+  IC121: 'aprobada',
+  IC122: 'aprobada',
+  IC211: 'aprobada',
+  IC212: 'aprobada',
+  IC213: 'aprobada',
+  IC221: 'aprobada',
+  IC222: 'en_curso',
+  IC223: 'regularizada',
+  IC224: 'aprobada',
+  IC313: 'regularizada',
+  IC314: 'regularizada',
+  IC315: 'aprobada',
+  IC322: 'aprobada',
+};
+
+const INITIAL_GRADES_MAP: Record<string, GradeInfo> = {
+  IC101: { grade: 7, statusText: 'Aprobado', origin: 'Examen' },
+  IC102: { grade: 8, statusText: 'Aprobado', origin: 'Examen' },
+  IC103: { grade: 9, statusText: 'Aprobado', origin: 'Examen' },
+  IC111: { grade: 6, statusText: 'Aprobado', origin: 'Examen' },
+  IC112: { grade: 8, statusText: 'Aprobado', origin: 'Examen' },
+  IC121: { grade: 10, statusText: 'Promocionado', origin: 'Promoción' },
+  IC122: { grade: 6, statusText: 'Aprobado', origin: 'Examen' },
+  IC211: { grade: 6, statusText: 'Aprobado', origin: 'Examen' },
+  IC212: { grade: 8, statusText: 'Aprobado', origin: 'Examen' },
+  IC213: { grade: 9, statusText: 'Aprobado', origin: 'Examen' },
+  IC221: { grade: 8, statusText: 'Aprobado', origin: 'Examen' },
+  IC222: { statusText: 'En Curso', origin: 'En Curso' },
+  IC223: { statusText: 'Regularidad', origin: 'Regularidad' },
+  IC224: { grade: 8, statusText: 'Aprobado', origin: 'Examen' },
+  IC313: { statusText: 'Regularidad', origin: 'Regularidad' },
+  IC314: { statusText: 'Regularidad', origin: 'Regularidad' },
+  IC315: { grade: 8, statusText: 'Aprobado', origin: 'Examen' },
+  IC322: { grade: 8, statusText: 'Aprobado', origin: 'Examen' },
+};
+
 export default function App() {
-  // Estado de avance del alumno guardado en localStorage
-  // Valores posibles por ID: 'pendiente' | 'regularizada' | 'aprobada'
-  const [statusMap, setStatusMap] = useState(() => {
+  // Estado de materias
+  const [statusMap, setStatusMap] = useState<Record<string, SubjectStatus>>(() => {
     try {
-      const saved = localStorage.getItem('ing_comp_2018_progress');
-      return saved ? JSON.parse(saved) : {};
+      const saved = localStorage.getItem('ing_comp_2018_progress_v3');
+      if (saved) return JSON.parse(saved);
+      return INITIAL_STATUS_MAP;
     } catch {
-      return {};
+      return INITIAL_STATUS_MAP;
     }
   });
 
-  const [selectedId, setSelectedId] = useState('IC311');
-  const [hoveredId, setHoveredId] = useState(null);
+  // Notas y calificaciones
+  const [gradesMap, setGradesMap] = useState<Record<string, GradeInfo>>(() => {
+    try {
+      const saved = localStorage.getItem('ing_comp_2018_grades_v3');
+      if (saved) return JSON.parse(saved);
+      return INITIAL_GRADES_MAP;
+    } catch {
+      return INITIAL_GRADES_MAP;
+    }
+  });
+
+  const [selectedId, setSelectedId] = useState('IC312');
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterMode, setFilterMode] = useState('ALL'); // 'ALL', 'CAN_CURSAR', 'CAN_RENDIR', 'APROBADAS', 'REGULARIZADAS', 'PENDIENTES'
+  const [filterMode, setFilterMode] = useState<
+    'ALL' | 'CAN_CURSAR' | 'CAN_RENDIR' | 'APROBADAS' | 'REGULARIZADAS' | 'EN_CURSO' | 'CONDICIONALES' | 'LIBRES' | 'PENDIENTES'
+  >('ALL');
   const [showConnections, setShowConnections] = useState(true);
+
+  // Modales
+  const [showGradesModal, setShowGradesModal] = useState(false);
+  const [showStrategyModal, setShowStrategyModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
 
-  // Referencias para dibujar las líneas conectoras SVG
-  const boardRef = useRef(null);
-  const cardRefs = useRef({});
-  const [svgLines, setSvgLines] = useState([]);
+  // SVG connector lines
+  const boardRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const [svgLines, setSvgLines] = useState<any[]>([]);
 
-  // Guardar cambios en localStorage
+  // Guardar en localStorage
   useEffect(() => {
     try {
-      localStorage.setItem('ing_comp_2018_progress', JSON.stringify(statusMap));
+      localStorage.setItem('ing_comp_2018_progress_v3', JSON.stringify(statusMap));
     } catch (e) {
-      console.error('No se pudo guardar en localStorage', e);
+      console.error(e);
     }
   }, [statusMap]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem('ing_comp_2018_grades_v3', JSON.stringify(gradesMap));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [gradesMap]);
+
   // Mapa rápido por ID
   const subjectsById = useMemo(() => {
-    const map = {};
+    const map: Record<string, any> = {};
     SUBJECTS_DATA.forEach((s) => {
       map[s.id] = s;
     });
     return map;
   }, []);
 
-  // Calcular qué materias desbloquea cada asignatura (hacia adelante)
-  const unlocksMap = useMemo(() => {
-    const map = {};
-    SUBJECTS_DATA.forEach((s) => {
-      map[s.id] = { forCursarReg: [], forCursarApr: [], forRendirApr: [] };
-    });
-    SUBJECTS_DATA.forEach((target) => {
-      target.cursarReg.forEach((reqId) => {
-        if (map[reqId]) map[reqId].forCursarReg.push(target.id);
-      });
-      target.cursarApr.forEach((reqId) => {
-        if (map[reqId]) map[reqId].forCursarApr.push(target.id);
-      });
-      target.rendirApr.forEach((reqId) => {
-        if (map[reqId]) map[reqId].forRendirApr.push(target.id);
-      });
-    });
-    return map;
-  }, []);
-
-  // Obtener el estado de una materia
   const getSubjectStatus = useCallback(
-    (id) => statusMap[id] || 'pendiente',
+    (id: string): SubjectStatus => statusMap[id] || 'pendiente',
     [statusMap]
   );
 
-  // Verificar si el alumno cumple las condiciones para CURSAR y para RENDIR una materia
+  const getSubjectGrade = useCallback(
+    (id: string): GradeInfo | undefined => gradesMap[id],
+    [gradesMap]
+  );
+
+  // Verificación de condiciones de elegibilidad
   const checkEligibility = useCallback(
-    (subject) => {
+    (subject: any) => {
       const currentStatus = getSubjectStatus(subject.id);
-      const isRegOrApr = (id) => {
+      const isRegOrApr = (id: string) => {
         const st = getSubjectStatus(id);
         return st === 'regularizada' || st === 'aprobada';
       };
-      const isApr = (id) => getSubjectStatus(id) === 'aprobada';
+      const isApr = (id: string) => getSubjectStatus(id) === 'aprobada';
+      const isLib = (id: string) => getSubjectStatus(id) === 'libre';
 
-      // Requisitos para cursar:
-      // 1. Todas las de cursarReg deben estar regularizadas o aprobadas
-      const missingCursarReg = subject.cursarReg.filter((id) => !isRegOrApr(id));
-      // 2. Todas las de cursarApr deben estar aprobadas
-      const missingCursarApr = subject.cursarApr.filter((id) => !isApr(id));
+      // Requisitos para cursar
+      const missingCursarReg = subject.cursarReg.filter((id: string) => !isRegOrApr(id));
+      const missingCursarApr = subject.cursarApr.filter((id: string) => !isApr(id));
+      const blockedByLibre = [...subject.cursarReg, ...subject.cursarApr, ...subject.rendirApr].filter(
+        (id: string) => isLib(id)
+      );
 
       const canCursar =
-        missingCursarReg.length === 0 && missingCursarApr.length === 0;
+        missingCursarReg.length === 0 && missingCursarApr.length === 0 && blockedByLibre.length === 0;
 
-      // Requisitos para rendir:
-      // Todas las de rendirApr deben estar aprobadas
-      const missingRendirApr = subject.rendirApr.filter((id) => !isApr(id));
-      const canRendir = missingRendirApr.length === 0;
+      // Requisitos para rendir
+      const missingRendirApr = subject.rendirApr.filter((id: string) => !isApr(id));
+      const canRendir =
+        missingRendirApr.length === 0 &&
+        (currentStatus === 'regularizada' || currentStatus === 'aprobada') &&
+        blockedByLibre.length === 0;
 
       return {
         currentStatus,
@@ -602,59 +663,174 @@ export default function App() {
         missingCursarReg,
         missingCursarApr,
         missingRendirApr,
+        blockedByLibre,
+        isCondicional: currentStatus === 'condicional',
+        isLibre: currentStatus === 'libre',
       };
     },
     [getSubjectStatus]
   );
 
-  // Cambiar estado de una materia haciendo clic (Ciclo: pendiente -> regularizada -> aprobada -> pendiente)
-  const cycleStatus = (id, e) => {
-    if (e) e.stopPropagation();
-    const current = getSubjectStatus(id);
-    const next =
-      current === 'pendiente'
-        ? 'regularizada'
-        : current === 'regularizada'
-        ? 'aprobada'
-        : 'pendiente';
-
-    setStatusMap((prev) => ({
-      ...prev,
-      [id]: next,
-    }));
-  };
-
-  // Fijar un estado directo
-  const setDirectStatus = (id, newStatus) => {
+  // Cambiar estado directo
+  const setDirectStatus = (id: string, newStatus: SubjectStatus) => {
     setStatusMap((prev) => ({
       ...prev,
       [id]: newStatus,
     }));
   };
 
-  // Acciones rápidas por lote (ej. Aprobar 1° Año, etc.)
-  const markYearAs = (yearNum, statusValue) => {
-    setStatusMap((prev) => {
-      const next = { ...prev };
-      SUBJECTS_DATA.filter((s) => s.year === yearNum).forEach((s) => {
-        next[s.id] = statusValue;
-      });
-      return next;
+  // Ciclar estado al hacer clic en badge (Ciclo extendido con libre y condicional)
+  const cycleStatus = (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const current = getSubjectStatus(id);
+    const order: SubjectStatus[] = [
+      'pendiente',
+      'en_curso',
+      'condicional',
+      'regularizada',
+      'aprobada',
+      'libre',
+    ];
+    const currentIndex = order.indexOf(current);
+    const next = order[(currentIndex + 1) % order.length];
+    setDirectStatus(id, next);
+  };
+
+  // Actualizar nota de una materia
+  const updateGrade = (id: string, grade?: number, statusText?: string, origin?: string) => {
+    setGradesMap((prev) => {
+      const current = prev[id] || { statusText: 'Aprobado', origin: 'Examen' };
+      return {
+        ...prev,
+        [id]: {
+          ...current,
+          ...(grade !== undefined ? { grade } : {}),
+          ...(statusText !== undefined ? { statusText } : {}),
+          ...(origin !== undefined ? { origin } : {}),
+        },
+      };
     });
   };
 
-  const resetAllProgress = () => {
-    setStatusMap({});
+  // Restablecer al analítico real de Tomás
+  const resetToOfficialTranscript = () => {
+    setStatusMap(INITIAL_STATUS_MAP);
+    setGradesMap(INITIAL_GRADES_MAP);
   };
 
-  // Materia activa para inspección / resaltado de relaciones
+  // Estadísticas globales y cálculo de promedio
+  const stats = useMemo(() => {
+    let approved = 0;
+    let regular = 0;
+    let enCurso = 0;
+    let condicional = 0;
+    let libre = 0;
+    let sumGrades = 0;
+    let countGrades = 0;
+
+    SUBJECTS_DATA.forEach((s) => {
+      const st = statusMap[s.id] || 'pendiente';
+      if (st === 'aprobada') approved++;
+      else if (st === 'regularizada') regular++;
+      else if (st === 'en_curso') enCurso++;
+      else if (st === 'condicional') condicional++;
+      else if (st === 'libre') libre++;
+
+      const gr = gradesMap[s.id];
+      if (gr && typeof gr.grade === 'number' && gr.grade > 0) {
+        sumGrades += gr.grade;
+        countGrades++;
+      }
+    });
+
+    const totalCore = 36; // Materias obligatorias + 2 optativas
+    const percentage = Math.min(100, Math.round((approved / totalCore) * 100));
+    const average = countGrades > 0 ? (sumGrades / countGrades).toFixed(2) : '0.00';
+
+    return {
+      approved,
+      regular,
+      enCurso,
+      condicional,
+      libre,
+      total: totalCore,
+      percentage,
+      average,
+      countGrades,
+    };
+  }, [statusMap, gradesMap]);
+
+  // Análisis de Estrategia para las Próximas Mesas
+  const strategyAnalysis = useMemo(() => {
+    const regularSubjects = SUBJECTS_DATA.filter((s) => getSubjectStatus(s.id) === 'regularizada');
+    const ranking = regularSubjects.map((subject) => {
+      const unblocksCursar: any[] = [];
+      const unblocksRendir: any[] = [];
+
+      SUBJECTS_DATA.forEach((target) => {
+        if (target.id === subject.id) return;
+        if (target.cursarApr.includes(subject.id)) {
+          unblocksCursar.push(target);
+        }
+        if (target.rendirApr.includes(subject.id)) {
+          unblocksRendir.push(target);
+        }
+      });
+
+      const impactScore = unblocksCursar.length * 2 + unblocksRendir.length;
+      return {
+        subject,
+        unblocksCursar,
+        unblocksRendir,
+        impactScore,
+      };
+    });
+
+    ranking.sort((a, b) => b.impactScore - a.impactScore);
+
+    const conditionalSubjects = SUBJECTS_DATA.filter((s) => getSubjectStatus(s.id) === 'condicional').map(
+      (s) => {
+        const eligibility = checkEligibility(s);
+        return {
+          subject: s,
+          missingCursarReg: eligibility.missingCursarReg.map((id) => subjectsById[id]?.name || id),
+          missingCursarApr: eligibility.missingCursarApr.map((id) => subjectsById[id]?.name || id),
+        };
+      }
+    );
+
+    const freeSubjects = SUBJECTS_DATA.filter((s) => getSubjectStatus(s.id) === 'libre').map((s) => {
+      const blockedDownstream: any[] = [];
+      SUBJECTS_DATA.forEach((target) => {
+        if (
+          target.cursarReg.includes(s.id) ||
+          target.cursarApr.includes(s.id) ||
+          target.rendirApr.includes(s.id)
+        ) {
+          blockedDownstream.push(target);
+        }
+      });
+      return {
+        subject: s,
+        blockedDownstream,
+      };
+    });
+
+    return {
+      ranking,
+      conditionalSubjects,
+      freeSubjects,
+    };
+  }, [statusMap, checkEligibility, subjectsById, getSubjectStatus]);
+
+  // Materia activa para inspección
   const activeSubjectId = hoveredId || selectedId;
   const activeSubject = activeSubjectId ? subjectsById[activeSubjectId] : null;
   const selectedSubject = selectedId ? subjectsById[selectedId] : null;
 
   // Determinar la relación de cualquier tarjeta respecto a la materia activa
   const getRelationToActive = useCallback(
-    (id) => {
+    (id: string) => {
       if (!activeSubject) return null;
       if (id === activeSubject.id) return 'ACTIVE';
 
@@ -666,7 +842,6 @@ export default function App() {
       if (isCursarReg) return 'REQ_CURSAR_REG';
       if (isRendirApr) return 'REQ_RENDIR_APR';
 
-      // Verificar si la materia activa desbloquea a `id`
       const target = subjectsById[id];
       if (target) {
         if (
@@ -683,7 +858,7 @@ export default function App() {
     [activeSubject, subjectsById]
   );
 
-  // Calcular líneas SVG entre la materia activa y sus correlativas
+  // Calcular líneas SVG conectoras
   const updateSvgLines = useCallback(() => {
     if (!showConnections || !activeSubject || !boardRef.current) {
       setSvgLines([]);
@@ -698,9 +873,8 @@ export default function App() {
     }
 
     const activeRect = activeEl.getBoundingClientRect();
-    const lines = [];
+    const lines: any[] = [];
 
-    // 1. Líneas desde requisitos (hacia la materia activa)
     const allReqs = new Set([
       ...activeSubject.cursarApr,
       ...activeSubject.cursarReg,
@@ -731,7 +905,6 @@ export default function App() {
       });
     });
 
-    // 2. Líneas desde la materia activa hacia las materias que desbloquea
     SUBJECTS_DATA.forEach((target) => {
       const isDirectUnlock =
         target.cursarReg.includes(activeSubject.id) ||
@@ -759,98 +932,66 @@ export default function App() {
     });
 
     setSvgLines(lines);
-  }, [activeSubject, showConnections]);
+  }, [showConnections, activeSubject]);
 
   useEffect(() => {
     updateSvgLines();
-    window.addEventListener('resize', updateSvgLines);
-    return () => window.removeEventListener('resize', updateSvgLines);
-  }, [updateSvgLines, statusMap, searchQuery, filterMode]);
+    const handleResize = () => updateSvgLines();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [updateSvgLines, activeSubjectId, selectedId]);
 
-  // Estadísticas globales de la carrera
-  // Nota: La carrera tiene 38 materias obligatorias + 2 optativas = 40 materias totales para recibirse
-  const stats = useMemo(() => {
-    const coreSubjects = SUBJECTS_DATA.filter(
-      (s) => !s.isOptativa && !s.isPlaceholderOptativa
-    );
-    const optativasList = SUBJECTS_DATA.filter((s) => s.isOptativa);
-    const placeholderOpts = SUBJECTS_DATA.filter((s) => s.isPlaceholderOptativa);
-
-    const coreApproved = coreSubjects.filter(
-      (s) => getSubjectStatus(s.id) === 'aprobada'
-    ).length;
-    const optApprovedCount =
-      optativasList.filter((s) => getSubjectStatus(s.id) === 'aprobada').length +
-      placeholderOpts.filter((s) => getSubjectStatus(s.id) === 'aprobada').length;
-
-    const effectiveOptApproved = Math.min(2, optApprovedCount);
-    const totalApproved = coreApproved + effectiveOptApproved;
-    const totalCareer = 40; // 38 obligatorias + 2 optativas
-
-    const totalRegular = SUBJECTS_DATA.filter(
-      (s) => !s.isPlaceholderOptativa && getSubjectStatus(s.id) === 'regularizada'
-    ).length;
-
-    const availableToCursar = SUBJECTS_DATA.filter((s) => {
-      if (s.isPlaceholderOptativa) return false;
-      const st = getSubjectStatus(s.id);
-      if (st !== 'pendiente') return false;
-      return checkEligibility(s).canCursar;
-    }).length;
-
-    const percentage = Math.round((totalApproved / totalCareer) * 100);
-
-    return {
-      totalApproved,
-      totalCareer,
-      totalRegular,
-      availableToCursar,
-      percentage,
-    };
-  }, [getSubjectStatus, checkEligibility]);
-
-  // Filtrado de búsqueda y estado
-  const matchesFilter = useCallback(
-    (subject) => {
-      const matchesSearch =
-        searchQuery.trim() === '' ||
-        subject.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        subject.id.toLowerCase().includes(searchQuery.toLowerCase());
-
-      if (!matchesSearch) return false;
-
-      const st = getSubjectStatus(subject.id);
-      const elig = checkEligibility(subject);
-
-      switch (filterMode) {
-        case 'CAN_CURSAR':
-          return st === 'pendiente' && elig.canCursar;
-        case 'CAN_RENDIR':
-          return st === 'regularizada' && elig.canRendir;
-        case 'APROBADAS':
-          return st === 'aprobada';
-        case 'REGULARIZADAS':
-          return st === 'regularizada';
-        case 'PENDIENTES':
-          return st === 'pendiente';
-        default:
-          return true;
-      }
-    },
-    [searchQuery, filterMode, getSubjectStatus, checkEligibility]
-  );
+  // Estilos y badges de estado
+  const getStatusBadge = (status: SubjectStatus) => {
+    switch (status) {
+      case 'aprobada':
+        return {
+          label: 'Aprobada',
+          icon: <CheckCircle2 className="w-3.5 h-3.5" />,
+          classes: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+        };
+      case 'regularizada':
+        return {
+          label: 'Regular',
+          icon: <Clock className="w-3.5 h-3.5" />,
+          classes: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+        };
+      case 'en_curso':
+        return {
+          label: 'En Curso',
+          icon: <BookOpen className="w-3.5 h-3.5" />,
+          classes: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+        };
+      case 'condicional':
+        return {
+          label: 'Condicional',
+          icon: <AlertTriangle className="w-3.5 h-3.5" />,
+          classes: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+        };
+      case 'libre':
+        return {
+          label: 'Libre',
+          icon: <XCircle className="w-3.5 h-3.5" />,
+          classes: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+        };
+      default:
+        return {
+          label: 'Pendiente',
+          icon: <Lock className="w-3.5 h-3.5 text-slate-400" />,
+          classes: 'bg-slate-800 text-slate-400 border-slate-700',
+        };
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
-      {/* ==========================================
-          BARRA SUPERIOR Y ESTADÍSTICAS
-      ========================================== */}
+      {/* HEADER PRINCIPAL */}
       <header className="sticky top-0 z-30 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 shadow-lg">
-        <div className="max-w-[1800px] mx-auto flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          {/* Título e Identidad */}
+        <div className="max-w-[1900px] mx-auto flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+          {/* Logo y Título */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center shadow-md shadow-indigo-500/20">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
                 <GraduationCap className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -863,563 +1004,465 @@ export default function App() {
                   </span>
                 </div>
                 <p className="text-xs text-slate-400">
-                  Mapa Interactivo de Correlatividades y Simulador de Avance • 5 Años
+                  Mapa Interactivo • Simulación de Correlatividades y Avance
                 </p>
               </div>
             </div>
 
-            <button
-              onClick={() => setShowHelpModal(true)}
-              className="lg:hidden p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300"
-              title="Cómo usar el mapa"
-            >
-              <HelpCircle className="w-5 h-5" />
-            </button>
+            {/* Botones de acción móvil */}
+            <div className="flex items-center gap-2 xl:hidden">
+              <button
+                onClick={() => setShowGradesModal(true)}
+                className="px-2.5 py-1.5 rounded-lg bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 text-xs font-semibold flex items-center gap-1.5"
+              >
+                <Award className="w-3.5 h-3.5" />
+                <span>⭐ {stats.average}</span>
+              </button>
+              <button
+                onClick={() => setShowStrategyModal(true)}
+                className="px-2.5 py-1.5 rounded-lg bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 text-xs font-semibold flex items-center gap-1.5"
+              >
+                <Target className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
 
-          {/* Métricas de Avance */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 lg:flex lg:items-center lg:gap-4">
-            <div className="bg-slate-800/70 border border-slate-700/70 rounded-xl px-3.5 py-2 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-emerald-500/15 text-emerald-400">
-                <Award className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-xs text-slate-400">Aprobadas</div>
-                <div className="text-sm font-bold text-white">
-                  {stats.totalApproved}{' '}
-                  <span className="text-slate-500 font-normal">/ {stats.totalCareer}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-slate-800/70 border border-slate-700/70 rounded-xl px-3.5 py-2 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-500/15 text-amber-400">
-                <Clock className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-xs text-slate-400">Regularizadas</div>
-                <div className="text-sm font-bold text-white">{stats.totalRegular}</div>
-              </div>
-            </div>
-
-            <div className="bg-slate-800/70 border border-slate-700/70 rounded-xl px-3.5 py-2 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-cyan-500/15 text-cyan-400">
-                <Unlock className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-xs text-slate-400">Habilitadas Cursar</div>
-                <div className="text-sm font-bold text-cyan-300">
-                  {stats.availableToCursar} materias
-                </div>
-              </div>
-            </div>
-
-            {/* Barra de porcentaje */}
-            <div className="bg-slate-800/70 border border-slate-700/70 rounded-xl px-3.5 py-2 min-w-[160px]">
-              <div className="flex justify-between items-center text-xs mb-1">
-                <span className="text-slate-400">Avance Carrera</span>
-                <span className="font-bold text-emerald-400">{stats.percentage}%</span>
-              </div>
-              <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
+          {/* Barra de Progreso y Estadísticas Rápidas */}
+          <div className="flex flex-wrap items-center gap-4 py-1 px-3 bg-slate-950/60 border border-slate-800 rounded-xl">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400 font-medium">Progreso:</span>
+              <div className="w-32 md:w-44 bg-slate-800 rounded-full h-2.5 overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-indigo-500 via-cyan-400 to-emerald-400 transition-all duration-500"
+                  className="bg-gradient-to-r from-indigo-500 via-cyan-400 to-emerald-400 h-2.5 rounded-full transition-all duration-500"
                   style={{ width: `${stats.percentage}%` }}
                 />
               </div>
+              <span className="text-xs font-bold text-white min-w-[3rem]">
+                {stats.percentage}%
+              </span>
             </div>
+
+            <div className="h-4 w-px bg-slate-800 hidden sm:block" />
+
+            {/* Badges de Conteo */}
+            <div className="flex items-center gap-2 text-xs">
+              <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium">
+                {stats.approved} Aprobadas
+              </span>
+              <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium">
+                {stats.regular} Regulares
+              </span>
+              <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30 font-medium">
+                {stats.enCurso} En Curso
+              </span>
+              {stats.condicional > 0 && (
+                <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 font-medium">
+                  {stats.condicional} Condicional
+                </span>
+              )}
+              {stats.libre > 0 && (
+                <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 font-medium">
+                  {stats.libre} Libre
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* BOTONES PRINCIPALES: Mis Notas & Estrategia */}
+          <div className="flex items-center gap-2.5">
+            {/* BOTÓN MIS NOTAS (DESTACADO SEGÚN PEDIDO) */}
+            <button
+              onClick={() => setShowGradesModal(true)}
+              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs flex items-center gap-2 shadow-lg shadow-emerald-600/25 transition transform active:scale-95"
+              title="Abrir historial de notas y calificaciones reales"
+            >
+              <Award className="w-4 h-4 text-emerald-200" />
+              <span>Mis Notas & Analítico</span>
+              <span className="px-1.5 py-0.5 rounded-md bg-white/20 text-white font-mono text-[11px] font-bold">
+                ⭐ {stats.average}
+              </span>
+            </button>
+
+            {/* BOTÓN ESTRATEGIA & MESAS */}
+            <button
+              onClick={() => setShowStrategyModal(true)}
+              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold text-xs flex items-center gap-2 shadow-lg shadow-indigo-600/25 transition transform active:scale-95"
+              title="Analizar prioridades para la próxima mesa y materias condicionales"
+            >
+              <Target className="w-4 h-4 text-indigo-200" />
+              <span>Estrategia & Mesas</span>
+              {strategyAnalysis.ranking.length > 0 && (
+                <span className="w-2 h-2 rounded-full bg-cyan-300 animate-pulse" />
+              )}
+            </button>
+
+            {/* Ayuda */}
+            <button
+              onClick={() => setShowHelpModal(true)}
+              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition"
+              title="Cómo usar la herramienta"
+            >
+              <HelpCircle className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
-        {/* Barra de Controles, Filtros y Acciones Rápidas */}
-        <div className="max-w-[1800px] mx-auto mt-3 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3">
-          {/* Buscador y Filtros */}
-          <div className="flex flex-wrap items-center gap-2 flex-1">
-            <div className="relative min-w-[220px] flex-1 max-w-xs">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar código (IC311) o materia..."
-                className="w-full bg-slate-950 border border-slate-700 focus:border-indigo-500 rounded-lg pl-9 pr-8 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-
-            {/* Botones de Filtro */}
-            <div className="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800 overflow-x-auto">
-              {[
-                { id: 'ALL', label: 'Todas' },
-                { id: 'CAN_CURSAR', label: 'Puedo Cursar' },
-                { id: 'CAN_RENDIR', label: 'Puedo Rendir Final' },
-                { id: 'REGULARIZADAS', label: 'Regularizadas' },
-                { id: 'APROBADAS', label: 'Aprobadas' },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setFilterMode(tab.id)}
-                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${
-                    filterMode === tab.id
-                      ? 'bg-indigo-600 text-white shadow'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+        {/* BARRA DE FILTROS Y BÚSQUEDA */}
+        <div className="max-w-[1900px] mx-auto mt-3 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3">
+          {/* Buscador */}
+          <div className="relative flex-1 min-w-[220px] max-w-md">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Buscar por materia o código (ej. IC223, Álgebra)..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs"
+              >
+                ✕
+              </button>
+            )}
           </div>
 
-          {/* Botones de Simulación Rápida por Año */}
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[11px] text-slate-400 mr-1 hidden sm:inline">
-              Autocompletar:
+          {/* Filtros de Estado */}
+          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+            <span className="text-slate-400 mr-1 flex items-center gap-1 text-[11px]">
+              <Filter className="w-3 h-3" /> Filtrar:
             </span>
-            {[1, 2, 3, 4].map((yr) => (
+
+            {[
+              { id: 'ALL', label: 'Todas' },
+              { id: 'CAN_CURSAR', label: 'Puedo Cursar' },
+              { id: 'CAN_RENDIR', label: 'Puedo Rendir' },
+              { id: 'APROBADAS', label: 'Aprobadas' },
+              { id: 'REGULARIZADAS', label: 'Regulares' },
+              { id: 'EN_CURSO', label: 'En Curso' },
+              { id: 'CONDICIONALES', label: 'Condicionales' },
+              { id: 'LIBRES', label: 'Libres' },
+            ].map((f) => (
               <button
-                key={yr}
-                onClick={() => markYearAs(yr, 'aprobada')}
-                className="text-xs px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-emerald-950/80 hover:text-emerald-300 hover:border-emerald-700/60 border border-slate-700 text-slate-300 transition flex items-center gap-1"
-                title={`Marcar todas las materias de ${yr}° Año como Aprobadas`}
+                key={f.id}
+                onClick={() => setFilterMode(f.id as any)}
+                className={`px-2.5 py-1 rounded-md transition font-medium text-[11px] ${
+                  filterMode === f.id
+                    ? 'bg-indigo-600 text-white shadow'
+                    : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800'
+                }`}
               >
-                <CheckCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span>{yr}° Año</span>
+                {f.label}
               </button>
             ))}
+          </div>
+
+          {/* Opciones visuales */}
+          <div className="flex items-center gap-3 text-xs">
+            <label className="flex items-center gap-1.5 text-slate-300 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={showConnections}
+                onChange={(e) => setShowConnections(e.target.checked)}
+                className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-0"
+              />
+              <span className="text-[11px]">Líneas de Correlatividad</span>
+            </label>
 
             <button
-              onClick={() => setShowConnections((v) => !v)}
-              className={`text-xs px-2.5 py-1.5 rounded-lg border transition flex items-center gap-1.5 ${
-                showConnections
-                  ? 'bg-indigo-950/60 border-indigo-500/50 text-indigo-300'
-                  : 'bg-slate-800 border-slate-700 text-slate-400'
-              }`}
-              title="Mostrar u ocultar líneas conectoras de correlatividades"
+              onClick={resetToOfficialTranscript}
+              className="text-[11px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1 underline underline-offset-2"
+              title="Restaura las notas y avance real de Tomás"
             >
-              <Eye className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">Líneas</span>
-            </button>
-
-            <button
-              onClick={resetAllProgress}
-              className="text-xs px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-950/70 hover:text-rose-300 border border-slate-700 text-slate-300 transition flex items-center gap-1"
-              title="Reiniciar todo el progreso"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Reiniciar</span>
-            </button>
-
-            <button
-              onClick={() => setShowHelpModal(true)}
-              className="hidden lg:flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition"
-            >
-              <HelpCircle className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Guía</span>
+              <RotateCcw className="w-3 h-3" />
+              Restablecer mis notas
             </button>
           </div>
         </div>
       </header>
 
-      {/* ==========================================
-          LEYENDA RÁPIDA DE COLORES Y CORRELATIVAS
-      ========================================== */}
-      <div className="bg-slate-900/50 border-b border-slate-800/80 px-4 py-2">
-        <div className="max-w-[1800px] mx-auto flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
-          <div className="flex flex-wrap items-center gap-4">
-            <span className="font-semibold text-slate-300 flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5 text-indigo-400" />
-              Al seleccionar una materia:
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-sm bg-amber-500/30 border border-amber-400 inline-block" />
-              <strong className="text-amber-300">Regularizada</strong> para cursar
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-sm bg-emerald-500/30 border border-emerald-400 inline-block" />
-              <strong className="text-emerald-300">Aprobada</strong> para cursar
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-sm bg-purple-500/30 border border-purple-400 inline-block" />
-              <strong className="text-purple-300">Aprobada</strong> para rendir
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-sm bg-cyan-500/30 border border-cyan-400 inline-block" />
-              <strong className="text-cyan-300">Desbloquea</strong> (Hacia adelante)
-            </span>
-          </div>
-          <div className="text-[11px] text-slate-400">
-            💡 <strong>Clic en una materia</strong> para ver detalles •{' '}
-            <strong>Clic en su botón de estado</strong> para cambiar entre{' '}
-            <span className="text-slate-300">Pendiente</span> →{' '}
-            <span className="text-amber-300">Regular</span> →{' '}
-            <span className="text-emerald-300">Aprobada</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ==========================================
-          CONTENEDOR PRINCIPAL: MAPA + PANEL LATERAL
-      ========================================== */}
-      <div className="flex-1 flex flex-col xl:flex-row max-w-[1800px] w-full mx-auto overflow-hidden">
-        {/* TABLERO DE COLUMNAS POR AÑO */}
-        <div className="flex-1 overflow-x-auto overflow-y-auto p-4 md:p-6">
-          <div
-            ref={boardRef}
-            className="relative min-w-[1280px] grid grid-cols-6 gap-4 pb-8"
+      {/* ÁREA DE TRABAJO PRINCIPAL: TABLERO + SIDEBAR */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* TABLERO DE MATERIAS ORGANIZADO POR AÑOS */}
+        <main
+          ref={boardRef}
+          className="flex-1 overflow-x-auto overflow-y-auto p-4 md:p-6 relative"
+          style={{ minHeight: 'calc(100vh - 120px)' }}
+        >
+          {/* LÍNEAS SVG CONECTORAS */}
+          <svg
+            className="absolute inset-0 pointer-events-none w-full h-full z-10"
+            style={{ overflow: 'visible' }}
           >
-            {/* CAPA SVG DE CONEXIONES */}
-            {showConnections && (
-              <svg className="pointer-events-none absolute inset-0 w-full h-full z-10 overflow-visible">
-                <defs>
-                  <marker
-                    id="arrow-amber"
-                    markerWidth="6"
-                    markerHeight="6"
-                    refX="5"
-                    refY="3"
-                    orient="auto"
-                  >
-                    <path d="M0,0 L6,3 L0,6 Z" fill="#f59e0b" />
-                  </marker>
-                  <marker
-                    id="arrow-emerald"
-                    markerWidth="6"
-                    markerHeight="6"
-                    refX="5"
-                    refY="3"
-                    orient="auto"
-                  >
-                    <path d="M0,0 L6,3 L0,6 Z" fill="#10b981" />
-                  </marker>
-                  <marker
-                    id="arrow-purple"
-                    markerWidth="6"
-                    markerHeight="6"
-                    refX="5"
-                    refY="3"
-                    orient="auto"
-                  >
-                    <path d="M0,0 L6,3 L0,6 Z" fill="#a855f7" />
-                  </marker>
-                  <marker
-                    id="arrow-cyan"
-                    markerWidth="6"
-                    markerHeight="6"
-                    refX="5"
-                    refY="3"
-                    orient="auto"
-                  >
-                    <path d="M0,0 L6,3 L0,6 Z" fill="#06b6d4" />
-                  </marker>
-                </defs>
+            <defs>
+              <marker
+                id="arrow-cyan"
+                viewBox="0 0 10 10"
+                refX="7"
+                refY="5"
+                markerWidth="6"
+                markerHeight="6"
+                orient="auto-start-reverse"
+              >
+                <path d="M 0 1 L 9 5 L 0 9 z" fill="#06b6d4" />
+              </marker>
+              <marker
+                id="arrow-amber"
+                viewBox="0 0 10 10"
+                refX="7"
+                refY="5"
+                markerWidth="6"
+                markerHeight="6"
+                orient="auto-start-reverse"
+              >
+                <path d="M 0 1 L 9 5 L 0 9 z" fill="#f59e0b" />
+              </marker>
+              <marker
+                id="arrow-emerald"
+                viewBox="0 0 10 10"
+                refX="7"
+                refY="5"
+                markerWidth="6"
+                markerHeight="6"
+                orient="auto-start-reverse"
+              >
+                <path d="M 0 1 L 9 5 L 0 9 z" fill="#10b981" />
+              </marker>
+            </defs>
 
-                {svgLines.map((line) => {
-                  const dx = Math.abs(line.endX - line.startX) * 0.45;
-                  const d = `M ${line.startX} ${line.startY} C ${
-                    line.startX + dx
-                  } ${line.startY}, ${line.endX - dx} ${line.endY}, ${
-                    line.endX
-                  } ${line.endY}`;
+            {svgLines.map((line) => {
+              let strokeColor = '#06b6d4';
+              let markerEnd = 'url(#arrow-cyan)';
+              let strokeDash = '';
 
-                  let stroke = '#94a3b8';
-                  let dash = '';
-                  let marker = '';
+              if (line.type === 'REQ_CURSAR_REG') {
+                strokeColor = '#f59e0b';
+                markerEnd = 'url(#arrow-amber)';
+                strokeDash = '4 3';
+              } else if (line.type === 'REQ_CURSAR_APR') {
+                strokeColor = '#10b981';
+                markerEnd = 'url(#arrow-emerald)';
+              } else if (line.type === 'REQ_RENDIR_APR') {
+                strokeColor = '#8b5cf6';
+                markerEnd = '';
+                strokeDash = '2 2';
+              }
 
-                  if (line.type === 'REQ_CURSAR_REG') {
-                    stroke = '#f59e0b';
-                    marker = 'url(#arrow-amber)';
-                  } else if (line.type === 'REQ_CURSAR_APR') {
-                    stroke = '#10b981';
-                    marker = 'url(#arrow-emerald)';
-                  } else if (line.type === 'REQ_RENDIR_APR') {
-                    stroke = '#a855f7';
-                    dash = '4 4';
-                    marker = 'url(#arrow-purple)';
-                  } else if (line.type === 'UNLOCKS') {
-                    stroke = '#06b6d4';
-                    marker = 'url(#arrow-cyan)';
-                  }
+              // Curva suave Bézier
+              const dx = Math.abs(line.endX - line.startX) * 0.5;
+              const pathD = `M ${line.startX} ${line.startY} C ${line.startX + dx} ${line.startY}, ${
+                line.endX - dx
+              } ${line.endY}, ${line.endX} ${line.endY}`;
 
-                  return (
-                    <path
-                      key={line.id}
-                      d={d}
-                      fill="none"
-                      stroke={stroke}
-                      strokeWidth="2.2"
-                      strokeDasharray={dash}
-                      markerEnd={marker}
-                      className="opacity-80 transition-all duration-300"
-                    />
-                  );
-                })}
-              </svg>
-            )}
+              return (
+                <path
+                  key={line.id}
+                  d={pathD}
+                  fill="none"
+                  stroke={strokeColor}
+                  strokeWidth="2.2"
+                  strokeDasharray={strokeDash}
+                  markerEnd={markerEnd}
+                  opacity="0.85"
+                />
+              );
+            })}
+          </svg>
 
-            {/* COLUMNAS DE CADA AÑO */}
+          {/* COLUMNAS POR AÑO */}
+          <div className="flex gap-4 min-w-max pb-12">
             {YEAR_COLUMNS.map((col) => {
-              const colSubjects = SUBJECTS_DATA.filter((s) => s.year === col.year);
-              const periods = ['ANUAL', '1°C', '2°C'];
+              const yearSubjects = SUBJECTS_DATA.filter((s) => s.year === col.year);
 
               return (
                 <div
                   key={col.year}
-                  className="flex flex-col bg-slate-900/40 border border-slate-800/80 rounded-2xl p-3 relative"
+                  className="w-[270px] md:w-[290px] flex-shrink-0 flex flex-col bg-slate-900/40 rounded-2xl border border-slate-800/80 p-3"
                 >
-                  {/* Encabezado de Columna */}
-                  <div className="mb-3 pb-2.5 border-b border-slate-800 flex items-center justify-between">
+                  {/* Encabezado de la columna */}
+                  <div className="pb-3 mb-3 border-b border-slate-800 flex items-center justify-between">
                     <div>
-                      <h2 className="text-sm font-bold text-white flex items-center gap-1.5">
+                      <h2 className="text-sm font-bold text-white tracking-wide">
                         {col.title}
                       </h2>
                       <p className="text-[11px] text-slate-400">{col.subtitle}</p>
                     </div>
-                    <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-800 text-slate-300">
-                      {
-                        colSubjects.filter(
-                          (s) => getSubjectStatus(s.id) === 'aprobada'
-                        ).length
-                      }
-                      /{colSubjects.length}
-                    </span>
+
+                    {col.year <= 5 && (
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => {
+                            // Autocompletar año como aprobadas
+                            setStatusMap((prev) => {
+                              const next = { ...prev };
+                              yearSubjects.forEach((s) => {
+                                next[s.id] = 'aprobada';
+                              });
+                              return next;
+                            });
+                          }}
+                          className="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 hover:bg-emerald-600/30 hover:text-emerald-300 text-slate-400 transition"
+                          title="Aprobar todo el año"
+                        >
+                          ✓ Todo
+                        </button>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Regla general de 4° y 5° año */}
-                  {col.year === 4 && (
-                    <div className="mb-3 p-2 rounded-lg bg-indigo-950/40 border border-indigo-500/30 text-[11px] text-indigo-200 leading-tight">
-                      <strong>Regla de Ciclo:</strong> 1°C pide todo 2° Año (1°C)
-                      aprobado. 2°C pide todo 2° Año (2°C) aprobado.
-                    </div>
-                  )}
-                  {col.year === 5 && (
-                    <div className="mb-3 p-2 rounded-lg bg-indigo-950/40 border border-indigo-500/30 text-[11px] text-indigo-200 leading-tight">
-                      <strong>Regla de Ciclo:</strong> 1°C pide todo 3° Año (1°C)
-                      aprobado. 2°C pide todo 3° Año (2°C) aprobado.
-                    </div>
-                  )}
-                  {col.year === 6 && (
-                    <div className="mb-3 p-2 rounded-lg bg-cyan-950/40 border border-cyan-500/30 text-[11px] text-cyan-200 leading-tight">
-                      <strong>Requisito General:</strong> Para cursar cualquier
-                      Optativa se requiere todo el 2°C de 3° Año aprobado.
-                    </div>
-                  )}
+                  {/* Lista de Materias de este Año */}
+                  <div className="flex flex-col gap-2.5">
+                    {yearSubjects.map((subject) => {
+                      const status = getSubjectStatus(subject.id);
+                      const grade = getSubjectGrade(subject.id);
+                      const eligibility = checkEligibility(subject);
+                      const relation = getRelationToActive(subject.id);
+                      const isSelected = selectedId === subject.id;
+                      const badge = getStatusBadge(status);
 
-                  {/* Grupos por Régimen (Anual, 1°C, 2°C) */}
-                  <div className="space-y-4 flex-1">
-                    {periods.map((period) => {
-                      const group = colSubjects.filter((s) => s.period === period);
-                      if (group.length === 0) return null;
+                      // Filtro de búsqueda
+                      if (searchQuery) {
+                        const q = searchQuery.toLowerCase();
+                        const matchesName = subject.name.toLowerCase().includes(q);
+                        const matchesId = subject.id.toLowerCase().includes(q);
+                        if (!matchesName && !matchesId) return null;
+                      }
+
+                      // Filtro por Estado
+                      if (filterMode === 'CAN_CURSAR' && !eligibility.canCursar) return null;
+                      if (filterMode === 'CAN_RENDIR' && !eligibility.canRendir) return null;
+                      if (filterMode === 'APROBADAS' && status !== 'aprobada') return null;
+                      if (filterMode === 'REGULARIZADAS' && status !== 'regularizada') return null;
+                      if (filterMode === 'EN_CURSO' && status !== 'en_curso') return null;
+                      if (filterMode === 'CONDICIONALES' && status !== 'condicional') return null;
+                      if (filterMode === 'LIBRES' && status !== 'libre') return null;
+
+                      // Resaltado de relaciones
+                      let relationBorder = '';
+                      let relationBg = '';
+
+                      if (relation === 'ACTIVE') {
+                        relationBorder = 'ring-2 ring-indigo-400 border-indigo-400';
+                        relationBg = 'bg-indigo-950/40';
+                      } else if (relation === 'REQ_CURSAR_REG') {
+                        relationBorder = 'ring-2 ring-amber-400 border-amber-400';
+                        relationBg = 'bg-amber-950/30';
+                      } else if (relation === 'REQ_CURSAR_APR') {
+                        relationBorder = 'ring-2 ring-emerald-400 border-emerald-400';
+                        relationBg = 'bg-emerald-950/30';
+                      } else if (relation === 'REQ_RENDIR_APR') {
+                        relationBorder = 'ring-2 ring-purple-400 border-purple-400';
+                        relationBg = 'bg-purple-950/30';
+                      } else if (relation === 'UNLOCKS') {
+                        relationBorder = 'ring-2 ring-cyan-400 border-cyan-400';
+                        relationBg = 'bg-cyan-950/30';
+                      }
 
                       return (
-                        <div key={period} className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-800/90 text-slate-300">
-                              {period === 'ANUAL'
-                                ? 'Régimen Anual'
-                                : period === '1°C'
-                                ? '1° Cuatrimestre'
-                                : '2° Cuatrimestre'}
-                            </span>
-                            <div className="h-px bg-slate-800 flex-1" />
+                        <div
+                          key={subject.id}
+                          ref={(el) => (cardRefs.current[subject.id] = el)}
+                          onClick={() => setSelectedId(subject.id)}
+                          onMouseEnter={() => setHoveredId(subject.id)}
+                          onMouseLeave={() => setHoveredId(null)}
+                          className={`group relative rounded-xl border p-2.5 transition-all duration-200 cursor-pointer select-none ${
+                            relationBorder ||
+                            (isSelected
+                              ? 'border-indigo-500 ring-1 ring-indigo-500 bg-indigo-950/20 shadow-lg'
+                              : 'border-slate-800 bg-slate-900/70 hover:border-slate-700 hover:bg-slate-900')
+                          } ${relationBg}`}
+                        >
+                          {/* Encabezado de la Tarjeta: Código, Período y Nota */}
+                          <div className="flex items-center justify-between gap-1 mb-1.5">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-mono text-[10px] font-bold text-slate-400 group-hover:text-indigo-300 transition">
+                                {subject.id}
+                              </span>
+                              <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-medium">
+                                {subject.period}
+                              </span>
+                            </div>
+
+                            {/* Insignia de Calificación si está disponible */}
+                            {grade?.grade ? (
+                              <span
+                                className={`text-[10px] font-bold px-1.5 py-0.2 rounded-md flex items-center gap-1 ${
+                                  grade.grade >= 8
+                                    ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-500/40'
+                                    : 'bg-indigo-500/30 text-indigo-200 border border-indigo-500/40'
+                                }`}
+                                title={`${grade.statusText} (${grade.origin})`}
+                              >
+                                ⭐ {grade.grade}
+                              </span>
+                            ) : null}
                           </div>
 
-                          <div className="space-y-2.5">
-                            {group.map((subject) => {
-                              const st = getSubjectStatus(subject.id);
-                              const elig = checkEligibility(subject);
-                              const relation = getRelationToActive(subject.id);
-                              const isVisible = matchesFilter(subject);
+                          {/* Nombre de la Materia */}
+                          <h3 className="text-xs font-semibold text-white leading-snug line-clamp-2 mb-2">
+                            {subject.name}
+                          </h3>
 
-                              // Estilos dinámicos según relación o estado
-                              let cardStyle =
-                                'bg-slate-900/90 border-slate-800 hover:border-slate-600';
-                              let relationBadge = null;
+                          {/* Estado Actual (Clic para ciclar) */}
+                          <div className="flex items-center justify-between pt-1 border-t border-slate-800/80">
+                            <button
+                              onClick={(e) => cycleStatus(subject.id, e)}
+                              className={`px-2 py-0.5 rounded-md border text-[10px] font-semibold flex items-center gap-1 transition ${badge.classes} hover:brightness-125`}
+                              title="Hacé clic para cambiar de estado (Pendiente → En Curso → Condicional → Regular → Aprobada → Libre)"
+                            >
+                              {badge.icon}
+                              <span>{badge.label}</span>
+                            </button>
 
-                              if (relation === 'ACTIVE') {
-                                cardStyle =
-                                  'bg-indigo-950/90 border-indigo-400 ring-2 ring-indigo-500/50 shadow-lg shadow-indigo-500/10 z-20';
-                              } else if (relation === 'REQ_CURSAR_APR') {
-                                cardStyle =
-                                  'bg-emerald-950/80 border-emerald-400 ring-1 ring-emerald-400/50 z-20';
-                                relationBadge = (
-                                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                                    Pide Aprobada (Cursar)
-                                  </span>
-                                );
-                              } else if (relation === 'REQ_CURSAR_REG') {
-                                cardStyle =
-                                  'bg-amber-950/80 border-amber-400 ring-1 ring-amber-400/50 z-20';
-                                relationBadge = (
-                                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                                    Pide Regular (Cursar)
-                                  </span>
-                                );
-                              } else if (relation === 'REQ_RENDIR_APR') {
-                                cardStyle =
-                                  'bg-purple-950/80 border-purple-400 ring-1 ring-purple-400/50 z-20';
-                                relationBadge = (
-                                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40">
-                                    Pide Aprobada (Rendir)
-                                  </span>
-                                );
-                              } else if (relation === 'UNLOCKS') {
-                                cardStyle =
-                                  'bg-cyan-950/80 border-cyan-400 ring-1 ring-cyan-400/50 z-20';
-                                relationBadge = (
-                                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
-                                    Habilita esta materia
-                                  </span>
-                                );
-                              } else {
-                                // Color por estado propio cuando no está involucrada en un highlight
-                                if (st === 'aprobada') {
-                                  cardStyle =
-                                    'bg-emerald-950/25 border-emerald-700/50 hover:border-emerald-500/70';
-                                } else if (st === 'regularizada') {
-                                  cardStyle =
-                                    'bg-amber-950/25 border-amber-700/50 hover:border-amber-500/70';
-                                } else if (elig.canCursar) {
-                                  cardStyle =
-                                    'bg-slate-900 border-cyan-500/40 hover:border-cyan-400';
-                                }
-                              }
-
-                              return (
-                                <div
-                                  key={subject.id}
-                                  ref={(el) => {
-                                    cardRefs.current[subject.id] = el;
-                                  }}
-                                  onClick={() => setSelectedId(subject.id)}
-                                  onMouseEnter={() => setHoveredId(subject.id)}
-                                  onMouseLeave={() => setHoveredId(null)}
-                                  className={`relative rounded-xl border p-2.5 transition-all duration-200 cursor-pointer select-none ${cardStyle} ${
-                                    !isVisible ? 'opacity-20 scale-95' : 'opacity-100'
+                            {/* Alerta de Cursar / Rendir */}
+                            <div className="flex items-center gap-1">
+                              {status === 'libre' ? (
+                                <span
+                                  className="text-[10px] text-rose-400 flex items-center gap-0.5 font-bold"
+                                  title="Quedaste libre: tenés que recursar o rendir libre"
+                                >
+                                  <XCircle className="w-3 h-3 text-rose-400" /> Libre
+                                </span>
+                              ) : status === 'condicional' ? (
+                                <span
+                                  className="text-[10px] text-purple-300 flex items-center gap-0.5 font-bold"
+                                  title="Cursando condicional"
+                                >
+                                  <AlertTriangle className="w-3 h-3 text-purple-400" /> Cond.
+                                </span>
+                              ) : status === 'regularizada' ? (
+                                <span
+                                  className={`text-[10px] flex items-center gap-0.5 font-medium ${
+                                    eligibility.canRendir ? 'text-emerald-400' : 'text-slate-500'
+                                  }`}
+                                  title={
+                                    eligibility.canRendir
+                                      ? '¡Lista para rendir examen final!'
+                                      : 'Faltan materias aprobadas para poder rendir final'
+                                  }
+                                >
+                                  {eligibility.canRendir ? '🎯 Rendible' : 'Falta final'}
+                                </span>
+                              ) : status === 'pendiente' ? (
+                                <span
+                                  className={`text-[10px] flex items-center gap-0.5 font-medium ${
+                                    eligibility.canCursar ? 'text-emerald-400' : 'text-slate-500'
                                   }`}
                                 >
-                                  {/* Fila Superior: Código + Estado Clickeable */}
-                                  <div className="flex items-center justify-between gap-1 mb-1.5">
-                                    <div className="flex items-center gap-1.5">
-                                      <span className="text-xs font-mono font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-200 border border-slate-700">
-                                        {subject.id}
-                                      </span>
-                                      {st === 'pendiente' && elig.canCursar && (
-                                        <span
-                                          className="text-[10px] px-1.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 font-medium flex items-center gap-0.5"
-                                          title="Cumplís las correlativas para cursar esta materia"
-                                        >
-                                          <Unlock className="w-2.5 h-2.5" />
-                                          Cursable
-                                        </span>
-                                      )}
-                                      {st === 'pendiente' && !elig.canCursar && (
-                                        <span
-                                          className="text-[10px] text-slate-500 flex items-center"
-                                          title="Faltan correlativas para cursar"
-                                        >
-                                          <Lock className="w-3 h-3" />
-                                        </span>
-                                      )}
-                                    </div>
-
-                                    {/* Botón rápido de estado */}
-                                    <button
-                                      onClick={(e) => cycleStatus(subject.id, e)}
-                                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border transition flex items-center gap-1 ${
-                                        st === 'aprobada'
-                                          ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/30'
-                                          : st === 'regularizada'
-                                          ? 'bg-amber-500/20 border-amber-500/50 text-amber-300 hover:bg-amber-500/30'
-                                          : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200 hover:bg-slate-700'
-                                      }`}
-                                      title="Clic para cambiar estado: Pendiente → Regularizada → Aprobada"
-                                    >
-                                      {st === 'aprobada' && (
-                                        <>
-                                          <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                                          Aprobada
-                                        </>
-                                      )}
-                                      {st === 'regularizada' && (
-                                        <>
-                                          <Clock className="w-3 h-3 text-amber-400" />
-                                          Regular
-                                        </>
-                                      )}
-                                      {st === 'pendiente' && <>Pendiente</>}
-                                    </button>
-                                  </div>
-
-                                  {/* Nombre de la Asignatura */}
-                                  <h3 className="text-xs font-semibold text-slate-100 leading-snug mb-1.5">
-                                    {subject.name}
-                                  </h3>
-
-                                  {/* Badge de Relación si está resaltada */}
-                                  {relationBadge && (
-                                    <div className="mt-1">{relationBadge}</div>
+                                  {eligibility.canCursar ? (
+                                    <>
+                                      <Unlock className="w-3 h-3" /> Cursable
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Lock className="w-3 h-3" /> Bloqueada
+                                    </>
                                   )}
-
-                                  {/* Resumen compacto de requisitos en la tarjeta */}
-                                  {!relationBadge && (
-                                    <div className="flex flex-wrap items-center justify-between gap-1 pt-1.5 border-t border-slate-800/80 text-[10px] text-slate-400">
-                                      <div className="flex items-center gap-1.5">
-                                        {subject.cursarReg.length === 0 &&
-                                        subject.cursarApr.length === 0 ? (
-                                          <span className="text-slate-500">
-                                            Sin correlativas
-                                          </span>
-                                        ) : (
-                                          <>
-                                            {subject.cursarReg.length > 0 && (
-                                              <span
-                                                className="text-amber-400/90"
-                                                title={`Regularizadas para cursar: ${subject.cursarReg.join(
-                                                  ', '
-                                                )}`}
-                                              >
-                                                Reg: {subject.cursarReg.length}
-                                              </span>
-                                            )}
-                                            {subject.cursarApr.length > 0 && (
-                                              <span
-                                                className="text-emerald-400/90"
-                                                title={`Aprobadas para cursar: ${subject.cursarApr.join(
-                                                  ', '
-                                                )}`}
-                                              >
-                                                Apr: {subject.cursarApr.length}
-                                              </span>
-                                            )}
-                                          </>
-                                        )}
-                                      </div>
-
-                                      {st === 'regularizada' && (
-                                        <span
-                                          className={`font-medium ${
-                                            elig.canRendir
-                                              ? 'text-emerald-400'
-                                              : 'text-rose-400'
-                                          }`}
-                                        >
-                                          {elig.canRendir
-                                            ? '✓ Puede Rendir'
-                                            : '✗ Falta Final Previo'}
-                                        </span>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })}
+                                </span>
+                              ) : null}
+                            </div>
                           </div>
                         </div>
                       );
@@ -1429,356 +1472,626 @@ export default function App() {
               );
             })}
           </div>
-        </div>
+        </main>
 
-        {/* ==========================================
-            PANEL INSPECTOR DETALLADO (DERECHA / ABAJO)
-        ========================================== */}
-        <aside className="w-full xl:w-96 bg-slate-900 border-t xl:border-t-0 xl:border-l border-slate-800 p-5 overflow-y-auto shrink-0">
-          {selectedSubject ? (
-            (() => {
-              const elig = checkEligibility(selectedSubject);
-              const unlocks = unlocksMap[selectedSubject.id] || {
-                forCursarReg: [],
-                forCursarApr: [],
-                forRendirApr: [],
-              };
-              const allUnlockedIds = Array.from(
-                new Set([
-                  ...unlocks.forCursarReg,
-                  ...unlocks.forCursarApr,
-                  ...unlocks.forRendirApr,
-                ])
-              );
+        {/* PANEL LATERAL DE DETALLES (INSPECCIÓN Y CONTROL RÁPIDO) */}
+        {selectedSubject && (
+          <aside className="w-80 md:w-96 bg-slate-900 border-l border-slate-800 p-4 flex flex-col overflow-y-auto shrink-0 shadow-2xl">
+            {/* Header del Panel */}
+            <div className="flex items-start justify-between pb-3 border-b border-slate-800">
+              <div>
+                <span className="font-mono text-xs font-bold text-indigo-400">
+                  {selectedSubject.id} • {selectedSubject.period}
+                </span>
+                <h2 className="text-base font-bold text-white leading-tight mt-0.5">
+                  {selectedSubject.name}
+                </h2>
+                <span className="text-[11px] text-slate-400">
+                  {selectedSubject.year <= 5 ? `${selectedSubject.year}° Año` : 'Optativa'}
+                </span>
+              </div>
+            </div>
 
-              return (
-                <div className="space-y-5">
-                  {/* Cabecera del Inspector */}
-                  <div>
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                        {selectedSubject.id}
-                      </span>
-                      <span className="text-xs text-slate-400">
-                        {selectedSubject.year === 6
-                          ? 'Asignatura Optativa'
-                          : `${selectedSubject.year}° Año`}{' '}
-                        •{' '}
-                        {selectedSubject.period === 'ANUAL'
-                          ? 'Anual'
-                          : selectedSubject.period}
-                      </span>
+            {/* Selector de Estados Rápidos de 1 Clic */}
+            <div className="mt-4">
+              <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+                Estado Actual de la Materia
+              </label>
+              <div className="grid grid-cols-2 gap-1.5 text-xs">
+                {[
+                  { id: 'aprobada', label: 'Aprobada', icon: CheckCircle2, color: 'text-emerald-300 bg-emerald-950/40 border-emerald-500/50' },
+                  { id: 'regularizada', label: 'Regularizada', icon: Clock, color: 'text-amber-300 bg-amber-950/40 border-amber-500/50' },
+                  { id: 'en_curso', label: 'En Curso', icon: BookOpen, color: 'text-blue-300 bg-blue-950/40 border-blue-500/50' },
+                  { id: 'condicional', label: 'Condicional', icon: AlertTriangle, color: 'text-purple-300 bg-purple-950/40 border-purple-500/50' },
+                  { id: 'libre', label: 'Quedó Libre', icon: XCircle, color: 'text-rose-300 bg-rose-950/40 border-rose-500/50' },
+                  { id: 'pendiente', label: 'Pendiente', icon: Lock, color: 'text-slate-400 bg-slate-800/40 border-slate-700' },
+                ].map((st) => {
+                  const isCurrent = getSubjectStatus(selectedSubject.id) === st.id;
+                  const Icon = st.icon;
+                  return (
+                    <button
+                      key={st.id}
+                      onClick={() => setDirectStatus(selectedSubject.id, st.id as SubjectStatus)}
+                      className={`px-2.5 py-2 rounded-lg border text-left flex items-center gap-1.5 transition ${
+                        isCurrent
+                          ? `${st.color} font-bold ring-2 ring-indigo-500/50`
+                          : 'border-slate-800 bg-slate-950/60 text-slate-400 hover:text-white hover:bg-slate-800'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5 shrink-0" />
+                      <span className="text-[11px]">{st.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Editor de Calificación */}
+            <div className="mt-4 p-3 bg-slate-950/70 border border-slate-800 rounded-xl">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-white flex items-center gap-1.5">
+                  <Award className="w-3.5 h-3.5 text-indigo-400" />
+                  Calificación y Origen
+                </span>
+                {getSubjectGrade(selectedSubject.id)?.grade && (
+                  <span className="text-xs font-bold text-emerald-400">
+                    Nota: {getSubjectGrade(selectedSubject.id)?.grade}
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <label className="text-[10px] text-slate-400 block mb-1">Nota (1 a 10):</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    placeholder="Ej. 8"
+                    value={getSubjectGrade(selectedSubject.id)?.grade || ''}
+                    onChange={(e) => {
+                      const val = e.target.value ? parseInt(e.target.value) : undefined;
+                      updateGrade(selectedSubject.id, val);
+                    }}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-400 block mb-1">Origen:</label>
+                  <select
+                    value={getSubjectGrade(selectedSubject.id)?.origin || 'Examen'}
+                    onChange={(e) => updateGrade(selectedSubject.id, undefined, undefined, e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="Examen">Examen</option>
+                    <option value="Promoción">Promoción</option>
+                    <option value="Regularidad">Regularidad</option>
+                    <option value="En Curso">En Curso</option>
+                    <option value="Equivalencia">Equivalencia</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* SECCIÓN CORRELATIVIDADES EXACTAS */}
+            <div className="mt-4 space-y-4 text-xs">
+              {/* Para Cursar */}
+              <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+                <h4 className="font-semibold text-white mb-2 flex items-center justify-between">
+                  <span>Requisitos para Cursar:</span>
+                  {checkEligibility(selectedSubject).canCursar ? (
+                    <span className="text-emerald-400 text-[11px] font-bold">✓ Habilitado</span>
+                  ) : (
+                    <span className="text-rose-400 text-[11px] font-bold">✕ Inhabilitado</span>
+                  )}
+                </h4>
+
+                {/* Regularizadas necesarias */}
+                <div className="mb-2">
+                  <span className="text-[11px] text-amber-300 font-medium block mb-1">
+                    • Regularizada necesaria ({selectedSubject.cursarReg.length}):
+                  </span>
+                  {selectedSubject.cursarReg.length === 0 ? (
+                    <p className="text-[11px] text-slate-500 italic pl-3">Ninguna</p>
+                  ) : (
+                    <div className="space-y-1 pl-2">
+                      {selectedSubject.cursarReg.map((reqId: string) => {
+                        const reqSub = subjectsById[reqId];
+                        const reqSt = getSubjectStatus(reqId);
+                        const ok = reqSt === 'regularizada' || reqSt === 'aprobada';
+                        const isLib = reqSt === 'libre';
+                        return (
+                          <div
+                            key={reqId}
+                            onClick={() => setSelectedId(reqId)}
+                            className="flex items-center justify-between text-[11px] p-1 rounded hover:bg-slate-800 cursor-pointer"
+                          >
+                            <span className="text-slate-300 truncate">{reqSub?.name || reqId}</span>
+                            <span
+                              className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
+                                isLib
+                                  ? 'bg-rose-500/20 text-rose-300'
+                                  : ok
+                                  ? 'bg-emerald-500/20 text-emerald-300'
+                                  : 'bg-slate-800 text-slate-400'
+                              }`}
+                            >
+                              {isLib ? 'Libre' : ok ? 'Cumplido' : 'Pendiente'}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
+                  )}
+                </div>
 
-                    <h2 className="text-lg font-bold text-white leading-snug">
-                      {selectedSubject.name}
-                    </h2>
+                {/* Aprobadas necesarias para cursar */}
+                <div>
+                  <span className="text-[11px] text-emerald-300 font-medium block mb-1">
+                    • Aprobada necesaria para cursar ({selectedSubject.cursarApr.length}):
+                  </span>
+                  {selectedSubject.cursarApr.length === 0 ? (
+                    <p className="text-[11px] text-slate-500 italic pl-3">Ninguna</p>
+                  ) : (
+                    <div className="space-y-1 pl-2">
+                      {selectedSubject.cursarApr.map((reqId: string) => {
+                        const reqSub = subjectsById[reqId];
+                        const ok = getSubjectStatus(reqId) === 'aprobada';
+                        return (
+                          <div
+                            key={reqId}
+                            onClick={() => setSelectedId(reqId)}
+                            className="flex items-center justify-between text-[11px] p-1 rounded hover:bg-slate-800 cursor-pointer"
+                          >
+                            <span className="text-slate-300 truncate">{reqSub?.name || reqId}</span>
+                            <span
+                              className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
+                                ok ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-400'
+                              }`}
+                            >
+                              {ok ? 'Aprobada' : 'Falta'}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
 
-                    {selectedSubject.generalRuleNote && (
-                      <div className="mt-2 p-2.5 rounded-lg bg-indigo-950/50 border border-indigo-500/30 text-xs text-indigo-200 flex items-start gap-2">
-                        <Info className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
-                        <span>{selectedSubject.generalRuleNote}</span>
-                      </div>
-                    )}
-                  </div>
+              {/* Para Rendir Final */}
+              <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+                <h4 className="font-semibold text-white mb-2 flex items-center justify-between">
+                  <span>Requisitos para Rendir Examen Final:</span>
+                  {checkEligibility(selectedSubject).canRendir ? (
+                    <span className="text-emerald-400 text-[11px] font-bold">✓ Puede rendir</span>
+                  ) : (
+                    <span className="text-amber-400 text-[11px] font-bold">Pendiente</span>
+                  )}
+                </h4>
 
-                  {/* Selector de Estado de la Materia */}
-                  <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-                    <span className="text-xs font-semibold text-slate-400 block mb-2">
-                      Tu estado en esta asignatura:
-                    </span>
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        {
-                          key: 'pendiente',
-                          label: 'Pendiente',
-                          activeClass:
-                            'bg-slate-700 text-white border-slate-500',
-                        },
-                        {
-                          key: 'regularizada',
-                          label: 'Regular',
-                          activeClass:
-                            'bg-amber-500/20 text-amber-300 border-amber-500',
-                        },
-                        {
-                          key: 'aprobada',
-                          label: 'Aprobada',
-                          activeClass:
-                            'bg-emerald-500/20 text-emerald-300 border-emerald-500',
-                        },
-                      ].map((item) => (
-                        <button
-                          key={item.key}
-                          onClick={() =>
-                            setDirectStatus(selectedSubject.id, item.key)
-                          }
-                          className={`py-2 px-2 rounded-lg text-xs font-semibold border transition flex items-center justify-center gap-1 ${
-                            elig.currentStatus === item.key
-                              ? item.activeClass
-                              : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800'
-                          }`}
+                <div>
+                  <span className="text-[11px] text-purple-300 font-medium block mb-1">
+                    • Finales aprobados requeridos ({selectedSubject.rendirApr.length}):
+                  </span>
+                  {selectedSubject.rendirApr.length === 0 ? (
+                    <p className="text-[11px] text-slate-500 italic pl-3">Ninguna</p>
+                  ) : (
+                    <div className="space-y-1 pl-2">
+                      {selectedSubject.rendirApr.map((reqId: string) => {
+                        const reqSub = subjectsById[reqId];
+                        const ok = getSubjectStatus(reqId) === 'aprobada';
+                        return (
+                          <div
+                            key={reqId}
+                            onClick={() => setSelectedId(reqId)}
+                            className="flex items-center justify-between text-[11px] p-1 rounded hover:bg-slate-800 cursor-pointer"
+                          >
+                            <span className="text-slate-300 truncate">{reqSub?.name || reqId}</span>
+                            <span
+                              className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
+                                ok ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-400'
+                              }`}
+                            >
+                              {ok ? 'Aprobada' : 'Pendiente'}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Materias que Desbloquea */}
+              <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+                <h4 className="font-semibold text-cyan-300 mb-2 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Materias Futuras que Desbloquea
+                </h4>
+                {(() => {
+                  const unlocks = SUBJECTS_DATA.filter(
+                    (t) =>
+                      t.cursarReg.includes(selectedSubject.id) ||
+                      t.cursarApr.includes(selectedSubject.id) ||
+                      t.rendirApr.includes(selectedSubject.id)
+                  );
+
+                  if (unlocks.length === 0) {
+                    return <p className="text-[11px] text-slate-500 italic">No tiene correlativas posteriores.</p>;
+                  }
+
+                  return (
+                    <div className="space-y-1">
+                      {unlocks.map((target) => (
+                        <div
+                          key={target.id}
+                          onClick={() => setSelectedId(target.id)}
+                          className="flex items-center justify-between text-[11px] p-1 rounded hover:bg-slate-800 cursor-pointer"
                         >
-                          {item.label}
-                        </button>
+                          <span className="text-slate-200 truncate">{target.name}</span>
+                          <span className="font-mono text-[10px] text-cyan-400">{target.id}</span>
+                        </div>
                       ))}
                     </div>
-
-                    {/* Diagnóstico de disponibilidad */}
-                    <div className="mt-3 pt-3 border-t border-slate-800/80 flex flex-col gap-1.5 text-xs">
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-400">¿Puedo cursarla?</span>
-                        {elig.canCursar ? (
-                          <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Sí, habilitada
-                          </span>
-                        ) : (
-                          <span className="text-rose-400 font-semibold flex items-center gap-1">
-                            <Lock className="w-3.5 h-3.5" /> Faltan correlativas
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-400">
-                          ¿Puedo rendir el final?
-                        </span>
-                        {elig.canRendir ? (
-                          <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Sí, habilitada
-                          </span>
-                        ) : (
-                          <span className="text-rose-400 font-semibold flex items-center gap-1">
-                            <Lock className="w-3.5 h-3.5" /> Faltan aprobadas
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* SECCIÓN 1: REQUISITOS PARA CURSAR */}
-                  <div className="space-y-3">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                      <ArrowLeft className="w-3.5 h-3.5 text-amber-400" />
-                      Requisitos para Cursar
-                    </h3>
-
-                    {/* Regularizadas para cursar */}
-                    <div className="bg-slate-950/70 rounded-xl p-3 border border-slate-800/90">
-                      <div className="text-xs font-semibold text-amber-300 mb-2 flex items-center justify-between">
-                        <span>Tener Regularizada (o Aprobada):</span>
-                        <span className="font-mono text-[11px]">
-                          {selectedSubject.cursarReg.length}
-                        </span>
-                      </div>
-                      {selectedSubject.cursarReg.length === 0 ? (
-                        <p className="text-xs text-slate-500">
-                          No exige materias regularizadas.
-                        </p>
-                      ) : (
-                        <div className="space-y-1.5">
-                          {selectedSubject.cursarReg.map((reqId) => {
-                            const reqSub = subjectsById[reqId];
-                            const st = getSubjectStatus(reqId);
-                            const ok = st === 'regularizada' || st === 'aprobada';
-                            return (
-                              <div
-                                key={reqId}
-                                onClick={() => setSelectedId(reqId)}
-                                className={`p-2 rounded-lg border text-xs flex items-center justify-between cursor-pointer transition ${
-                                  ok
-                                    ? 'bg-emerald-950/20 border-emerald-800/50 text-emerald-200'
-                                    : 'bg-rose-950/20 border-rose-800/40 text-slate-300 hover:border-slate-600'
-                                }`}
-                              >
-                                <div className="flex items-center gap-2 truncate">
-                                  <span className="font-mono font-bold text-[11px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-200">
-                                    {reqId}
-                                  </span>
-                                  <span className="truncate">{reqSub?.name}</span>
-                                </div>
-                                <span
-                                  className={`text-[10px] font-semibold px-1.5 py-0.5 rounded shrink-0 ${
-                                    ok
-                                      ? 'bg-emerald-500/20 text-emerald-300'
-                                      : 'bg-rose-500/20 text-rose-300'
-                                  }`}
-                                >
-                                  {ok ? 'Cumple' : 'Falta Reg.'}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Aprobadas para cursar */}
-                    <div className="bg-slate-950/70 rounded-xl p-3 border border-slate-800/90">
-                      <div className="text-xs font-semibold text-emerald-300 mb-2 flex items-center justify-between">
-                        <span>Tener Aprobada (Final):</span>
-                        <span className="font-mono text-[11px]">
-                          {selectedSubject.cursarApr.length}
-                        </span>
-                      </div>
-                      {selectedSubject.cursarApr.length === 0 ? (
-                        <p className="text-xs text-slate-500">
-                          No exige materias aprobadas para cursar.
-                        </p>
-                      ) : (
-                        <div className="space-y-1.5">
-                          {selectedSubject.cursarApr.map((reqId) => {
-                            const reqSub = subjectsById[reqId];
-                            const st = getSubjectStatus(reqId);
-                            const ok = st === 'aprobada';
-                            return (
-                              <div
-                                key={reqId}
-                                onClick={() => setSelectedId(reqId)}
-                                className={`p-2 rounded-lg border text-xs flex items-center justify-between cursor-pointer transition ${
-                                  ok
-                                    ? 'bg-emerald-950/20 border-emerald-800/50 text-emerald-200'
-                                    : 'bg-rose-950/20 border-rose-800/40 text-slate-300 hover:border-slate-600'
-                                }`}
-                              >
-                                <div className="flex items-center gap-2 truncate">
-                                  <span className="font-mono font-bold text-[11px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-200">
-                                    {reqId}
-                                  </span>
-                                  <span className="truncate">{reqSub?.name}</span>
-                                </div>
-                                <span
-                                  className={`text-[10px] font-semibold px-1.5 py-0.5 rounded shrink-0 ${
-                                    ok
-                                      ? 'bg-emerald-500/20 text-emerald-300'
-                                      : 'bg-rose-500/20 text-rose-300'
-                                  }`}
-                                >
-                                  {ok ? 'Aprobada' : 'Falta Final'}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* SECCIÓN 2: REQUISITOS PARA RENDIR FINAL */}
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                      <GraduationCap className="w-3.5 h-3.5 text-purple-400" />
-                      Para Rendir Examen Final
-                    </h3>
-                    <div className="bg-slate-950/70 rounded-xl p-3 border border-slate-800/90">
-                      <div className="text-xs font-semibold text-purple-300 mb-2 flex items-center justify-between">
-                        <span>Exige Final Aprobado de:</span>
-                        <span className="font-mono text-[11px]">
-                          {selectedSubject.rendirApr.length}
-                        </span>
-                      </div>
-                      {selectedSubject.rendirApr.length === 0 ? (
-                        <p className="text-xs text-slate-500">
-                          Sin correlativas para rendir.
-                        </p>
-                      ) : (
-                        <div className="flex flex-wrap gap-1.5">
-                          {selectedSubject.rendirApr.map((reqId) => {
-                            const ok = getSubjectStatus(reqId) === 'aprobada';
-                            return (
-                              <button
-                                key={reqId}
-                                onClick={() => setSelectedId(reqId)}
-                                className={`text-xs font-mono px-2 py-1 rounded border transition flex items-center gap-1 ${
-                                  ok
-                                    ? 'bg-emerald-950/40 border-emerald-600/50 text-emerald-300'
-                                    : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-purple-400'
-                                }`}
-                                title={subjectsById[reqId]?.name}
-                              >
-                                {reqId}
-                                {ok ? (
-                                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                                ) : (
-                                  <Clock className="w-3 h-3 text-rose-400" />
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* SECCIÓN 3: QUÉ MATERIAS DESBLOQUEA HACIA ADELANTE */}
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                      <ArrowRight className="w-3.5 h-3.5 text-cyan-400" />
-                      Materias que Desbloquea ({allUnlockedIds.length})
-                    </h3>
-                    <div className="bg-slate-950/70 rounded-xl p-3 border border-slate-800/90">
-                      {allUnlockedIds.length === 0 ? (
-                        <p className="text-xs text-slate-500">
-                          Esta asignatura no es correlativa de materias posteriores.
-                        </p>
-                      ) : (
-                        <div className="space-y-1.5">
-                          {allUnlockedIds.map((targetId) => {
-                            const targetSub = subjectsById[targetId];
-                            if (!targetSub) return null;
-                            const needsReg =
-                              targetSub.cursarReg.includes(selectedSubject.id);
-                            const needsApr =
-                              targetSub.cursarApr.includes(selectedSubject.id);
-
-                            return (
-                              <div
-                                key={targetId}
-                                onClick={() => setSelectedId(targetId)}
-                                className="p-2 rounded-lg bg-slate-900/90 border border-slate-800 hover:border-cyan-500/50 text-xs flex items-center justify-between cursor-pointer transition"
-                              >
-                                <div className="flex items-center gap-2 truncate">
-                                  <span className="font-mono font-bold text-[11px] px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">
-                                    {targetId}
-                                  </span>
-                                  <span className="truncate text-slate-200">
-                                    {targetSub.name}
-                                  </span>
-                                </div>
-                                <span className="text-[10px] text-slate-400 shrink-0 ml-2">
-                                  {needsApr
-                                    ? 'Pide Final'
-                                    : needsReg
-                                    ? 'Pide Reg.'
-                                    : 'Para Rendir'}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })()
-          ) : (
-            <div className="h-full flex flex-col items-center justify-center text-center text-slate-500 py-12">
-              <BookOpen className="w-10 h-10 mb-2 stroke-1" />
-              <p className="text-sm">
-                Seleccioná cualquier materia del mapa para inspeccionar todas sus
-                correlatividades.
-              </p>
+                  );
+                })()}
+              </div>
             </div>
-          )}
-        </aside>
+          </aside>
+        )}
       </div>
 
-      {/* ==========================================
-          MODAL DE AYUDA / REGLAS DEL PLAN 2018
-      ========================================== */}
+      {/* ============================================================ */}
+      {/* MODAL 1: MIS NOTAS Y ANALÍTICO ACADÉMICO (OVERLAY PRINCIPAL) */}
+      {/* ============================================================ */}
+      {showGradesModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 md:p-6 animate-in fade-in duration-150">
+          <div className="bg-slate-900 border border-slate-700/80 rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+            {/* Header del Modal */}
+            <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-900 via-slate-800/80 to-slate-900">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md shadow-emerald-500/25">
+                  <Award className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    Historial Académico y Registro de Calificaciones
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Ingeniería en Computación • Plan 2018
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowGradesModal(false)}
+                className="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Tarjetas de Resumen Superior */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-5 bg-slate-950/60 border-b border-slate-800">
+              <div className="p-3 bg-slate-900/90 border border-emerald-500/30 rounded-xl">
+                <span className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">
+                  Promedio General
+                </span>
+                <div className="text-2xl font-black text-emerald-400 mt-0.5 flex items-baseline gap-1.5">
+                  ⭐ {stats.average}
+                  <span className="text-xs text-slate-400 font-normal">
+                    ({stats.countGrades} notas)
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-3 bg-slate-900/90 border border-indigo-500/30 rounded-xl">
+                <span className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">
+                  Materias Aprobadas
+                </span>
+                <div className="text-2xl font-black text-indigo-300 mt-0.5">
+                  {stats.approved}{' '}
+                  <span className="text-xs text-slate-400 font-normal">
+                    / {stats.total} ({stats.percentage}%)
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-3 bg-slate-900/90 border border-amber-500/30 rounded-xl">
+                <span className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">
+                  Regularizadas
+                </span>
+                <div className="text-2xl font-black text-amber-300 mt-0.5">
+                  {stats.regular}{' '}
+                  <span className="text-xs text-slate-400 font-normal">para rendir</span>
+                </div>
+              </div>
+
+              <div className="p-3 bg-slate-900/90 border border-blue-500/30 rounded-xl">
+                <span className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">
+                  En Curso / Condicional
+                </span>
+                <div className="text-2xl font-black text-blue-300 mt-0.5">
+                  {stats.enCurso + stats.condicional}
+                </div>
+              </div>
+            </div>
+
+            {/* Tabla de Calificaciones */}
+            <div className="flex-1 overflow-y-auto p-5">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-slate-400 uppercase tracking-wider text-[10px]">
+                      <th className="py-2.5 px-3">Código</th>
+                      <th className="py-2.5 px-3">Asignatura</th>
+                      <th className="py-2.5 px-3">Año / Período</th>
+                      <th className="py-2.5 px-3">Estado</th>
+                      <th className="py-2.5 px-3">Nota</th>
+                      <th className="py-2.5 px-3">Origen / Condición</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60 font-medium">
+                    {SUBJECTS_DATA.map((s) => {
+                      const st = getSubjectStatus(s.id);
+                      const gr = getSubjectGrade(s.id);
+                      const isApproved = st === 'aprobada';
+
+                      return (
+                        <tr
+                          key={s.id}
+                          className={`hover:bg-slate-800/40 transition ${
+                            isApproved ? 'bg-emerald-950/10' : ''
+                          }`}
+                        >
+                          <td className="py-2 px-3 font-mono text-[11px] text-slate-400 font-bold">
+                            {s.id}
+                          </td>
+                          <td className="py-2 px-3 text-white font-semibold">{s.name}</td>
+                          <td className="py-2 px-3 text-slate-400">
+                            {s.year <= 5 ? `${s.year}° Año` : 'Optativa'} • {s.period}
+                          </td>
+                          <td className="py-2 px-3">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                                getStatusBadge(st).classes
+                              }`}
+                            >
+                              {getStatusBadge(st).label}
+                            </span>
+                          </td>
+                          <td className="py-2 px-3">
+                            <input
+                              type="number"
+                              min="1"
+                              max="10"
+                              placeholder="-"
+                              value={gr?.grade || ''}
+                              onChange={(e) => {
+                                const val = e.target.value ? parseInt(e.target.value) : undefined;
+                                updateGrade(s.id, val);
+                              }}
+                              className="w-16 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-white font-bold text-center focus:outline-none focus:border-indigo-500"
+                            />
+                          </td>
+                          <td className="py-2 px-3 text-slate-300">
+                            <span className="px-2 py-0.5 rounded bg-slate-800 text-[11px]">
+                              {gr?.origin || (isApproved ? 'Examen' : '-')}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Footer con Acciones */}
+            <div className="p-4 bg-slate-950/80 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
+              <button
+                onClick={resetToOfficialTranscript}
+                className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 underline"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                Restablecer notas originales de Tomás
+              </button>
+
+              <button
+                onClick={() => setShowGradesModal(false)}
+                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md transition"
+              >
+                Cerrar Ventana
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* MODAL 2: ESTRATEGIAS ACADÉMICAS, PRÓXIMAS MESAS Y CONDICIONAL */}
+      {/* ============================================================ */}
+      {showStrategyModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 md:p-6 animate-in fade-in duration-150">
+          <div className="bg-slate-900 border border-slate-700/80 rounded-2xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-500/25">
+                  <Target className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    Estrategia Académica & Próximas Mesas de Examen
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Análisis de cuellos de botella, finales clave y cursada condicional
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowStrategyModal(false)}
+                className="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Contenido de Estrategias */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-6">
+              {/* SECCIÓN 1: RANKING DE FINALES A RENDIR */}
+              <div>
+                <h4 className="text-sm font-bold text-white flex items-center gap-2 mb-2">
+                  <Flame className="w-4 h-4 text-amber-400" />
+                  Prioridad para las Próximas Mesas (Materias Regulares a Rendir)
+                </h4>
+                <p className="text-xs text-slate-400 mb-3">
+                  Ordenadas de mayor a menor impacto: te muestra cuántas materias destrabás inmediatamente al aprobar cada final.
+                </p>
+
+                {strategyAnalysis.ranking.length === 0 ? (
+                  <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800 text-xs text-slate-400">
+                    No tenés materias en condición regular actualmente.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {strategyAnalysis.ranking.map((item, idx) => (
+                      <div
+                        key={item.subject.id}
+                        className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 transition"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <span className="font-mono text-xs font-bold text-indigo-400">
+                              #{idx + 1} • {item.subject.id}
+                            </span>
+                            <h5 className="text-sm font-bold text-white">
+                              {item.subject.name}
+                            </h5>
+                          </div>
+                          <span className="px-2 py-1 rounded bg-amber-500/20 text-amber-300 font-bold text-xs border border-amber-500/30">
+                            Impacto: {item.impactScore} pts
+                          </span>
+                        </div>
+
+                        <div className="mt-2.5 text-xs text-slate-300 space-y-1">
+                          {item.unblocksCursar.length > 0 && (
+                            <p>
+                              👉 <strong className="text-emerald-400">Habilita a Cursar:</strong>{' '}
+                              {item.unblocksCursar.map((u) => u.name).join(', ')}
+                            </p>
+                          )}
+                          {item.unblocksRendir.length > 0 && (
+                            <p>
+                              👉 <strong className="text-cyan-400">Habilita a Rendir:</strong>{' '}
+                              {item.unblocksRendir.map((u) => u.name).join(', ')}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* SECCIÓN 2: CURSADA CONDICIONAL */}
+              <div>
+                <h4 className="text-sm font-bold text-white flex items-center gap-2 mb-2">
+                  <AlertTriangle className="w-4 h-4 text-purple-400" />
+                  Materias en Cursado Condicional
+                </h4>
+                <p className="text-xs text-slate-400 mb-3">
+                  Materias en las que estás anotado condicionalmente mientras regularizás o aprobás sus requisitos previos.
+                </p>
+
+                {strategyAnalysis.conditionalSubjects.length === 0 ? (
+                  <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800 text-xs text-slate-400">
+                    No tenés materias marcadas como condicionales. Podés marcar cualquier materia como "Condicional" desde su tarjeta o panel lateral para simular esta estrategia.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {strategyAnalysis.conditionalSubjects.map((item) => (
+                      <div
+                        key={item.subject.id}
+                        className="p-3.5 rounded-xl bg-purple-950/20 border border-purple-500/40"
+                      >
+                        <h5 className="text-sm font-bold text-purple-200">
+                          {item.subject.name} ({item.subject.id})
+                        </h5>
+                        <p className="text-xs text-slate-300 mt-1">
+                          Requisitos que debés regularizar o rendir para no perder la condicionalidad:
+                        </p>
+                        <ul className="list-disc pl-5 mt-1 text-xs text-purple-300">
+                          {item.missingCursarReg.map((m, i) => (
+                            <li key={i}>Regularizar: {m}</li>
+                          ))}
+                          {item.missingCursarApr.map((m, i) => (
+                            <li key={i}>Aprobar Final: {m}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* SECCIÓN 3: MATERIAS LIBRES */}
+              <div>
+                <h4 className="text-sm font-bold text-white flex items-center gap-2 mb-2">
+                  <XCircle className="w-4 h-4 text-rose-400" />
+                  Materias Quedadas Libres
+                </h4>
+                <p className="text-xs text-slate-400 mb-3">
+                  Materias donde perdiste la regularidad. Esto frena correlatividades posteriores hasta que las recurses o apruebes en examen libre.
+                </p>
+
+                {strategyAnalysis.freeSubjects.length === 0 ? (
+                  <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800 text-xs text-emerald-400">
+                    ✓ ¡Excelente! No tenés ninguna materia en condición libre.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {strategyAnalysis.freeSubjects.map((item) => (
+                      <div
+                        key={item.subject.id}
+                        className="p-3.5 rounded-xl bg-rose-950/20 border border-rose-500/40"
+                      >
+                        <h5 className="text-sm font-bold text-rose-200">
+                          {item.subject.name} ({item.subject.id})
+                        </h5>
+                        <p className="text-xs text-rose-300 mt-1">
+                          Esta condición bloquea las siguientes asignaturas futuras:
+                        </p>
+                        <p className="text-xs text-slate-300 mt-0.5">
+                          {item.blockedDownstream.map((b) => b.name).join(', ') || 'Ninguna inmediata'}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-slate-950/80 border-t border-slate-800 flex justify-end">
+              <button
+                onClick={() => setShowStrategyModal(false)}
+                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition"
+              >
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* MODAL 3: AYUDA Y GUÍA */}
+      {/* ============================================================ */}
       {showHelpModal && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
@@ -1795,43 +2108,20 @@ export default function App() {
 
             <div className="space-y-3 text-xs text-slate-300 leading-relaxed">
               <p>
-                <strong>1. Explorá Correlatividades al Instante:</strong> Pasá el
-                mouse o hacé clic sobre cualquier materia para ver conectadas en{' '}
-                <span className="text-amber-300 font-semibold">Amarillo</span> las
-                que necesitás regularizar, en{' '}
-                <span className="text-emerald-300 font-semibold">Verde</span> las
-                que necesitás aprobar para cursar, y en{' '}
-                <span className="text-cyan-300 font-semibold">Celeste</span> las
-                materias futuras que destraba.
+                <strong>1. Estados de Materias:</strong> Cada tarjeta tiene 6 estados posibles:
+                <br />• <strong>Aprobada (Verde):</strong> Examen final o promoción aprobada.
+                <br />• <strong>Regular (Amarillo):</strong> Cursada aprobada, lista para rendir final.
+                <br />• <strong>En Curso (Azul):</strong> La estás cursando este cuatrimestre.
+                <br />• <strong>Condicional (Violeta):</strong> La estás cursando bajo régimen condicional.
+                <br />• <strong>Libre (Rojo):</strong> Perdiste la regularidad (recursar o rendir libre).
+                <br />• <strong>Pendiente (Gris):</strong> Aún no iniciada.
               </p>
               <p>
-                <strong>2. Simulá tu Avance Académico:</strong> Hacé clic en el
-                botón de estado de cada tarjeta (<em>Pendiente → Regular → Aprobada</em>)
-                o usá los botones rápidos de <strong>Autocompletar Año</strong> en
-                la barra superior. Tu progreso queda guardado automáticamente en tu
-                navegador.
+                <strong>2. Mis Notas y Analítico:</strong> Tocá el botón verde en la barra superior para ver tus notas reales, calcular tu promedio general en tiempo real y editar cualquier nota.
               </p>
               <p>
-                <strong>3. Reglas Generales de Ciclo Incluidas:</strong>
+                <strong>3. Estrategia & Mesas:</strong> Tocá el botón violeta para ver qué materias te conviene rendir primero para destrabar la mayor cantidad de asignaturas.
               </p>
-              <ul className="list-disc pl-5 space-y-1 text-slate-400">
-                <li>
-                  <strong>4° Año (1°C):</strong> Exige tener aprobadas todas las del
-                  1°C de 2° Año (IC211, IC212, IC213).
-                </li>
-                <li>
-                  <strong>4° Año (2°C):</strong> Exige tener aprobadas todas las del
-                  2°C de 2° Año (IC221, IC222, IC223, IC224).
-                </li>
-                <li>
-                  <strong>5° Año (1°C):</strong> Exige tener aprobadas todas las del
-                  1°C de 3° Año (IC311 a IC315).
-                </li>
-                <li>
-                  <strong>5° Año (2°C) y Optativas:</strong> Exige tener aprobadas
-                  todas las del 2°C de 3° Año (IC321 a IC324).
-                </li>
-              </ul>
             </div>
 
             <div className="pt-2 flex justify-end">
