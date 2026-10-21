@@ -19,6 +19,7 @@ import {
   GraduationCap,
   X,
   Eye,
+  EyeOff,
   HelpCircle,
   AlertTriangle,
   XCircle,
@@ -574,7 +575,47 @@ export default function App() {
     }
   });
 
-  const [selectedId, setSelectedId] = useState('IC312');
+  const [selectedId, setSelectedId] = useState<string | null>('IC312');
+  const [collapsedYears, setCollapsedYears] = useState<number[]>(() => {
+    try {
+      const saved = localStorage.getItem('ing_comp_collapsed_years');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Guardar años colapsados en localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('ing_comp_collapsed_years', JSON.stringify(collapsedYears));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [collapsedYears]);
+
+  const toggleYearCollapse = (year: number) => {
+    setCollapsedYears((prev) =>
+      prev.includes(year) ? prev.filter((y) => y !== year) : [...prev, year]
+    );
+  };
+
+  const collapseCompletedYears = () => {
+    const completed = YEAR_COLUMNS.filter((col) => {
+      const yearSubjects = SUBJECTS_DATA.filter((s) => s.year === col.year);
+      return (
+        yearSubjects.length > 0 &&
+        yearSubjects.every((s) => getSubjectStatus(s.id) === 'aprobada')
+      );
+    }).map((col) => col.year);
+
+    setCollapsedYears((prev) => Array.from(new Set([...prev, ...completed])));
+  };
+
+  const expandAllYears = () => {
+    setCollapsedYears([]);
+  };
+
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterMode, setFilterMode] = useState<
@@ -586,6 +627,20 @@ export default function App() {
   const [showGradesModal, setShowGradesModal] = useState(false);
   const [showStrategyModal, setShowStrategyModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
+
+  // Atajo de teclado: Escape cierra panel lateral o modales
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showGradesModal) setShowGradesModal(false);
+        else if (showStrategyModal) setShowStrategyModal(false);
+        else if (showHelpModal) setShowHelpModal(false);
+        else if (selectedId) setSelectedId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showGradesModal, showStrategyModal, showHelpModal, selectedId]);
 
   // SVG connector lines
   const boardRef = useRef<HTMLDivElement>(null);
@@ -939,7 +994,7 @@ export default function App() {
     const handleResize = () => updateSvgLines();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [updateSvgLines, activeSubjectId, selectedId]);
+  }, [updateSvgLines, activeSubjectId, selectedId, collapsedYears]);
 
   // Estilos y badges de estado
   const getStatusBadge = (status: SubjectStatus) => {
@@ -1159,6 +1214,47 @@ export default function App() {
             ))}
           </div>
 
+          {/* Controles de Años / Despejar Espacio */}
+          <div className="flex items-center gap-1.5 text-xs bg-slate-950/80 px-2.5 py-1 rounded-lg border border-slate-800">
+            <span className="text-slate-400 mr-1 flex items-center gap-1 text-[11px] font-medium">
+              <Eye className="w-3 h-3 text-indigo-400" /> Años:
+            </span>
+            {YEAR_COLUMNS.map((col) => {
+              const isCollapsed = collapsedYears.includes(col.year);
+              return (
+                <button
+                  key={col.year}
+                  onClick={() => toggleYearCollapse(col.year)}
+                  className={`px-2 py-0.5 rounded text-[11px] font-bold transition border ${
+                    !isCollapsed
+                      ? 'bg-indigo-600/30 text-indigo-200 border-indigo-500/40 hover:bg-indigo-600/40'
+                      : 'bg-slate-900 text-slate-500 border-slate-800 hover:text-slate-300'
+                  }`}
+                  title={`${!isCollapsed ? 'Ocultar / Colapsar' : 'Mostrar'} ${col.title}`}
+                >
+                  {col.year <= 5 ? `${col.year}°` : 'Opt'}
+                </button>
+              );
+            })}
+            {collapsedYears.length > 0 ? (
+              <button
+                onClick={expandAllYears}
+                className="text-[10px] text-indigo-400 hover:text-indigo-300 underline font-semibold ml-1"
+                title="Expandir todos los años"
+              >
+                Mostrar todos
+              </button>
+            ) : (
+              <button
+                onClick={collapseCompletedYears}
+                className="text-[10px] text-emerald-400 hover:text-emerald-300 underline font-semibold ml-1"
+                title="Ocultar automáticamente los años donde tenés todo aprobado (ej. 1° Año)"
+              >
+                Ocultar aprobados
+              </button>
+            )}
+          </div>
+
           {/* Opciones visuales */}
           <div className="flex items-center gap-3 text-xs">
             <label className="flex items-center gap-1.5 text-slate-300 cursor-pointer select-none">
@@ -1275,6 +1371,55 @@ export default function App() {
           <div className="flex gap-4 min-w-max pb-12">
             {YEAR_COLUMNS.map((col) => {
               const yearSubjects = SUBJECTS_DATA.filter((s) => s.year === col.year);
+              const isCollapsed = collapsedYears.includes(col.year);
+
+              // VISTA COLAPSADA (TIRA VERTICAL COMPACTA PARA DESPEJAR ESPACIO)
+              if (isCollapsed) {
+                const approvedInYear = yearSubjects.filter((s) => getSubjectStatus(s.id) === 'aprobada').length;
+                const totalInYear = yearSubjects.length;
+                const allApproved = approvedInYear === totalInYear && totalInYear > 0;
+
+                return (
+                  <div
+                    key={col.year}
+                    onClick={() => toggleYearCollapse(col.year)}
+                    className="w-14 md:w-16 flex-shrink-0 flex flex-col items-center justify-between bg-slate-900/60 hover:bg-slate-900 border border-slate-800/80 hover:border-indigo-500/50 rounded-2xl p-3 cursor-pointer transition group select-none shadow-sm"
+                    title={`Hacé clic para expandir ${col.title} (${approvedInYear}/${totalInYear} aprobadas)`}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleYearCollapse(col.year);
+                        }}
+                        className="p-1.5 rounded-lg bg-slate-800 group-hover:bg-indigo-600 text-slate-400 group-hover:text-white transition"
+                        title="Expandir columna"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <span
+                        className="text-xs font-bold text-slate-300 group-hover:text-white tracking-widest uppercase transition mt-2"
+                        style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+                      >
+                        {col.title}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col items-center gap-1.5">
+                      <span
+                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                          allApproved
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                            : 'bg-slate-800 text-slate-400 border border-slate-700'
+                        }`}
+                      >
+                        {approvedInYear}/{totalInYear}
+                      </span>
+                      {allApproved && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                    </div>
+                  </div>
+                );
+              }
 
               return (
                 <div
@@ -1290,8 +1435,8 @@ export default function App() {
                       <p className="text-[11px] text-slate-400">{col.subtitle}</p>
                     </div>
 
-                    {col.year <= 5 && (
-                      <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1">
+                      {col.year <= 5 && (
                         <button
                           onClick={() => {
                             // Autocompletar año como aprobadas
@@ -1308,8 +1453,15 @@ export default function App() {
                         >
                           ✓ Todo
                         </button>
-                      </div>
-                    )}
+                      )}
+                      <button
+                        onClick={() => toggleYearCollapse(col.year)}
+                        className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                        title="Ocultar/Colapsar este año para despejar espacio"
+                      >
+                        <EyeOff className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Lista de Materias de este Año */}
@@ -1490,6 +1642,13 @@ export default function App() {
                   {selectedSubject.year <= 5 ? `${selectedSubject.year}° Año` : 'Optativa'}
                 </span>
               </div>
+              <button
+                onClick={() => setSelectedId(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition -mr-1"
+                title="Cerrar ventana de detalles (o presioná Esc)"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
             {/* Selector de Estados Rápidos de 1 Clic */}
