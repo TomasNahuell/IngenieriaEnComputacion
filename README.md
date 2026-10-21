@@ -1,29 +1,39 @@
 # 🎓 Mapa Interactivo - Plan de Estudios
 ### Ingeniería en Computación (Plan 2018)
 
-Una aplicación web moderna, interactiva y responsiva para visualizar el mapa curricular, entender el régimen de correlatividades y simular el progreso académico a lo largo de la carrera.
+Una aplicación web moderna, interactiva y responsiva para que **cualquier estudiante** de la carrera pueda visualizar el mapa curricular, entender el régimen de correlatividades oficiales, cargar sus notas, calcular su promedio y definir estrategias de cursada y finales.
 
 ---
 
 ## ✨ Características Principales
 
-- **Visualización Completa del Plan:** Todas las asignaturas organizadas por año (1° a 5°) y cuatrimestres (1°C, 2°C y Anuales), además de las materias optativas.
+- **Diseñado para Cualquier Estudiante:** La aplicación inicia limpia (en blanco) para cada nuevo usuario. Podés ingresar tu nombre para personalizar tu tablero y cargar tus notas personales.
 - **Trazado Dinámico de Correlativas:** Al seleccionar o pasar el cursor por encima de una materia, se dibujan conexiones visuales y se resaltan con colores:
   - 🟡 **Amarillo:** Materias que necesitás regularizar para cursar.
   - 🟢 **Verde:** Materias que necesitás aprobar para cursar.
+  - 🟣 **Violeta:** Requisitos para rendir examen final.
   - 🔵 **Celeste:** Materias futuras que esta asignatura desbloquea.
-- **Seguimiento de Progreso y Guardado Automático:**
-  - Marcá el estado de cada materia: `Pendiente`, `Regularizada` o `Aprobada`.
-  - Tu progreso se almacena automáticamente en el `localStorage` de tu navegador para que nunca lo pierdas.
-  - Barra de progreso general con porcentaje de la carrera completado.
-- **Acciones Rápidas:**
-  - Botones de autocompletado rápido por año completo.
-  - Reinicio seguro del progreso.
-- **Buscador y Filtros:**
-  - Búsqueda en tiempo real por nombre de asignatura o código (ej. `IC311`, `Álgebra`).
-  - Filtros: *Todas*, *Puedo cursar*, *Puedo rendir*, *Aprobadas*, *Regularizadas*, *Pendientes*.
-- **Reglas de Ciclo Integradas:** Contempla requisitos de ciclo (ej. requisitos de 4° y 5° año).
-- **Diseño Moderno:** Tema oscuro optimizado con Tailwind CSS, compatible con pantallas móviles, tablets y monitores ultrawide.
+- **6 Estados de Materia:**
+  - 🟢 **Aprobada:** Examen final o promoción.
+  - 🟡 **Regular:** Cursada aprobada, pendiente de final.
+  - 🔵 **En Curso:** Cursando durante el cuatrimestre actual.
+  - 🟣 **Condicional:** Cursando bajo régimen condicional.
+  - 🔴 **Libre:** Pérdida de regularidad (alerta de correlativas bloqueadas).
+  - ⚪ **Pendiente:** Materia por cursar.
+- **Gestión de Notas y Analítico (⭐ Promedio en Tiempo Real):**
+  - Tabla completa para ingresar calificaciones numéricas (1 a 10) y su origen (Examen, Promoción, etc.).
+  - Al cargar una nota de aprobación (4 a 10), la materia se marca aprobada automáticamente.
+  - Cálculo instantáneo de promedio general y porcentaje de carrera completado.
+- **Estrategia & Próximas Mesas de Examen:**
+  - Ranking de materias regulares según impacto de desbloqueo (te indica qué final te conviene rendir primero).
+  - Seguimiento de materias condicionales y finales urgentes pendientes.
+- **Optimización de Espacio:**
+  - **Ocultar / Colapsar Años:** Botones para colapsar años completos en tiras delgadas de 56px (por ejemplo, podés ocultar los años que ya tengas 100% aprobados con el botón *"Ocultar aprobados"*).
+  - **Cerrar Panel Lateral:** Botón `[ ✕ ]` o tecla `Esc` para ocultar los detalles y expandir el mapa al 100% del ancho de pantalla.
+- **Control de Datos:**
+  - **Limpiar Avance:** Botón para reiniciar todos los datos a cero en cualquier momento.
+  - **Plantilla de Ejemplo:** Posibilidad de cargar un avance de prueba para explorar las funciones.
+  - **Persistencia en LocalStorage:** Todos los datos se guardan en el navegador del usuario de manera privada.
 
 ---
 
@@ -38,41 +48,28 @@ Una aplicación web moderna, interactiva y responsiva para visualizar el mapa cu
    ```bash
    npm run dev
    ```
-4. Abrí en tu navegador la URL que te indica la terminal (usualmente `http://localhost:5173`).
+4. Abrí en tu navegador la URL que indica la terminal (usualmente `http://localhost:5173`).
 
 ---
 
-## 📦 Cómo Subir a tu GitHub y Activar GitHub Pages
+## 📦 Despliegue en GitHub Pages
 
-El proyecto ya viene configurado con un **flujo de GitHub Actions automático** (`.github/workflows/deploy.yml`) y rutas relativas (`base: './'`), lo que significa que se publica sin necesidad de configurar dominios adicionales.
+El proyecto ya cuenta con el flujo automatizado de **GitHub Actions** (`.github/workflows/deploy.yml`) y rutas relativas (`base: './'`).
 
-### Paso 1: Crear el repositorio en GitHub
-1. Entrá a [GitHub](https://github.com) y creá un nuevo repositorio (por ejemplo llamado `plan-de-estudios` o `ingenieria-computacion`).
-2. Podés dejarlo público o privado (GitHub Pages en cuentas gratuitas requiere que el repositorio sea público para desplegar páginas web).
-
-### Paso 2: Vincular y subir tu código
-Abrí una terminal en la carpeta de este proyecto y ejecutá:
-
-```bash
-git remote add origin https://github.com/TU_USUARIO/TU_REPOSITORIO.git
-git branch -M main
-git push -u origin main
-```
-
-*(Reemplazá `TU_USUARIO` y `TU_REPOSITORIO` por los tuyos).*
-
-### Paso 3: Activar GitHub Pages con GitHub Actions
-1. En tu repositorio de GitHub, andá a **Settings** (Configuración) > **Pages** (en el menú lateral izquierdo).
-2. En **Build and deployment** > **Source**, seleccioná:
+1. Subí tus cambios a tu repositorio de GitHub:
+   ```bash
+   git push -u origin main
+   ```
+2. En GitHub, andá a **Settings** > **Pages** y asegurate de que en **Build and deployment > Source** esté seleccionado:
    👉 **GitHub Actions**
-3. ¡Listo! En la pestaña **Actions** verás cómo se compila y publica tu sitio web automáticamente. En un par de minutos tendrás tu enlace listo: `https://TU_USUARIO.github.io/TU_REPOSITORIO/`.
+3. ¡Listo! Tu página estará disponible públicamente en `https://TU_USUARIO.github.io/TU_REPOSITORIO/`.
 
 ---
 
 ## 🛠️ Tecnologías Utilizadas
 
-- **[React 18](https://react.dev/)**
-- **[TypeScript](https://www.typescriptlang.org/)**
-- **[Vite](https://vitejs.dev/)** (Empaquetado ultrarrápido)
-- **[Tailwind CSS](https://tailwindcss.com/)** (Estilos y diseño responsivo)
-- **[Lucide React](https://lucide.dev/)** (Iconos modernos)
+- **React 18**
+- **TypeScript**
+- **Vite**
+- **Tailwind CSS**
+- **Lucide React**
