@@ -703,6 +703,8 @@ export default function App() {
     'ALL' | 'CAN_CURSAR' | 'CAN_RENDIR' | 'APROBADAS' | 'REGULARIZADAS' | 'EN_CURSO' | 'CONDICIONALES' | 'LIBRES' | 'PENDIENTES'
   >('ALL');
   const [showConnections, setShowConnections] = useState(true);
+  // Ocultar barra de herramientas/filtros por defecto en pantallas chicas (móviles)
+  const [showMobileToolbar, setShowMobileToolbar] = useState(false);
 
   // Modales
   const [showGradesModal, setShowGradesModal] = useState(false);
@@ -1318,8 +1320,24 @@ export default function App() {
               )}
             </div>
 
-            {/* Botones de acción móvil */}
+            {/* Botones de acción móvil (pantallas chicas) */}
             <div className="flex items-center gap-1.5 xl:hidden">
+              <button
+                onClick={() => setShowMobileToolbar((prev) => !prev)}
+                className={`px-2.5 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition ${
+                  showMobileToolbar || filterMode !== 'ALL' || searchQuery
+                    ? 'bg-indigo-600/30 border-indigo-500/50 text-indigo-300'
+                    : 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white'
+                }`}
+                title="Mostrar u ocultar filtros, búsqueda y opciones"
+              >
+                <Filter className="w-3.5 h-3.5 text-indigo-400" />
+                <span className="text-[11px] font-medium">{showMobileToolbar ? 'Ocultar' : 'Filtros'}</span>
+                {(filterMode !== 'ALL' || searchQuery) && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                )}
+              </button>
+
               <button
                 onClick={handleSaveCurrentState}
                 className="p-1.5 rounded-lg bg-slate-800 border border-slate-700 text-emerald-400 hover:text-white transition"
@@ -1327,18 +1345,30 @@ export default function App() {
               >
                 <Save className="w-4 h-4" />
               </button>
+
               <button
                 onClick={() => setShowGradesModal(true)}
                 className="px-2.5 py-1.5 rounded-lg bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 text-xs font-semibold flex items-center gap-1.5"
+                title="Mis Notas & Analítico"
               >
                 <Award className="w-3.5 h-3.5" />
                 <span>{stats.countGrades > 0 ? `⭐ ${stats.average}` : 'Notas'}</span>
               </button>
+
               <button
                 onClick={() => setShowStrategyModal(true)}
-                className="px-2.5 py-1.5 rounded-lg bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 text-xs font-semibold flex items-center gap-1.5"
+                className="p-1.5 rounded-lg bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 text-xs font-semibold flex items-center gap-1.5"
+                title="Estrategia y mesas"
               >
                 <Target className="w-3.5 h-3.5" />
+              </button>
+
+              <button
+                onClick={() => setShowHelpModal(true)}
+                className="p-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 hover:text-white transition"
+                title="Ayuda"
+              >
+                <HelpCircle className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
@@ -1384,8 +1414,8 @@ export default function App() {
             </div>
           </div>
 
-          {/* BOTONES PRINCIPALES: Mis Notas, Guardar & Estrategia */}
-          <div className="flex items-center gap-2.5">
+          {/* BOTONES PRINCIPALES: Mis Notas, Guardar & Estrategia (Desktop) */}
+          <div className="hidden xl:flex items-center gap-2.5">
             {/* BOTÓN MIS NOTAS (DESTACADO SEGÚN PEDIDO) */}
             <button
               onClick={() => setShowGradesModal(true)}
@@ -1433,10 +1463,14 @@ export default function App() {
           </div>
         </div>
 
-        {/* BARRA DE FILTROS Y BÚSQUEDA */}
-        <div className="max-w-[1900px] mx-auto mt-3 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3">
+        {/* BARRA DE FILTROS Y BÚSQUEDA (Oculta por defecto en celulares/pantallas chicas) */}
+        <div
+          className={`${
+            showMobileToolbar ? 'flex' : 'hidden'
+          } xl:flex max-w-[1900px] mx-auto mt-3 pt-3 border-t border-slate-800/80 flex-wrap items-center justify-between gap-3 animate-in fade-in duration-150`}
+        >
           {/* Buscador */}
-          <div className="relative flex-1 min-w-[220px] max-w-md">
+          <div className="relative flex-1 min-w-[220px] max-w-md w-full sm:w-auto">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
@@ -1455,9 +1489,9 @@ export default function App() {
             )}
           </div>
 
-          {/* Filtros de Estado */}
-          <div className="flex flex-wrap items-center gap-1.5 text-xs">
-            <span className="text-slate-400 mr-1 flex items-center gap-1 text-[11px]">
+          {/* Filtros de Estado (Scrolleable horizontalmente en móvil) */}
+          <div className="flex items-center gap-1.5 text-xs max-w-full overflow-x-auto pb-1 sm:pb-0 sm:flex-wrap">
+            <span className="text-slate-400 mr-1 flex items-center gap-1 text-[11px] shrink-0">
               <Filter className="w-3 h-3" /> Filtrar:
             </span>
 
@@ -1474,7 +1508,7 @@ export default function App() {
               <button
                 key={f.id}
                 onClick={() => setFilterMode(f.id as any)}
-                className={`px-2.5 py-1 rounded-md transition font-medium text-[11px] ${
+                className={`px-2.5 py-1 rounded-md transition font-medium text-[11px] shrink-0 ${
                   filterMode === f.id
                     ? 'bg-indigo-600 text-white shadow'
                     : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800'
@@ -1486,7 +1520,7 @@ export default function App() {
           </div>
 
           {/* Controles de Años / Despejar Espacio */}
-          <div className="flex items-center gap-1.5 text-xs bg-slate-950/80 px-2.5 py-1 rounded-lg border border-slate-800">
+          <div className="flex items-center gap-1.5 text-xs bg-slate-950/80 px-2.5 py-1 rounded-lg border border-slate-800 flex-wrap">
             <span className="text-slate-400 mr-1 flex items-center gap-1 text-[11px] font-medium">
               <Eye className="w-3 h-3 text-indigo-400" /> Años:
             </span>
@@ -1527,7 +1561,7 @@ export default function App() {
           </div>
 
           {/* Opciones visuales y Gestión rápida */}
-          <div className="flex items-center gap-3 text-xs">
+          <div className="flex items-center gap-3 text-xs flex-wrap">
             <label className="flex items-center gap-1.5 text-slate-300 cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -1563,6 +1597,27 @@ export default function App() {
             </button>
           </div>
         </div>
+
+        {/* Chip indicador en móvil cuando hay filtro o búsqueda activa y la barra está oculta */}
+        {!showMobileToolbar && (filterMode !== 'ALL' || searchQuery) && (
+          <div className="xl:hidden mt-2 pt-2 border-t border-slate-800/60 flex items-center justify-between text-xs text-slate-400">
+            <div className="flex items-center gap-1.5">
+              <Filter className="w-3 h-3 text-indigo-400" />
+              <span className="text-[11px]">
+                Filtro activo: <strong className="text-indigo-300">{filterMode !== 'ALL' ? filterMode : `"${searchQuery}"`}</strong>
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                setFilterMode('ALL');
+                setSearchQuery('');
+              }}
+              className="text-[10px] text-slate-400 hover:text-white underline font-medium"
+            >
+              Quitar filtro
+            </button>
+          </div>
+        )}
       </header>
 
       {/* ÁREA DE TRABAJO PRINCIPAL: TABLERO + SIDEBAR */}
