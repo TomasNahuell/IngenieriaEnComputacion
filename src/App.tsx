@@ -20,6 +20,8 @@ import {
   X,
   Eye,
   EyeOff,
+  User,
+  Trash2,
   HelpCircle,
   AlertTriangle,
   XCircle,
@@ -509,8 +511,8 @@ const YEAR_COLUMNS = [
   { year: 6, title: 'Optativas', subtitle: 'Elegir 2 materias (2°C)' },
 ];
 
-// DATOS INICIALES REALES DEL ALUMNO (TOMÁS)
-const INITIAL_STATUS_MAP: Record<string, SubjectStatus> = {
+// DATOS DE EJEMPLO / PLANTILLA (Plan 3° Año)
+const SAMPLE_DEMO_STATUS_MAP: Record<string, SubjectStatus> = {
   IC101: 'aprobada',
   IC102: 'aprobada',
   IC103: 'aprobada',
@@ -531,7 +533,7 @@ const INITIAL_STATUS_MAP: Record<string, SubjectStatus> = {
   IC322: 'aprobada',
 };
 
-const INITIAL_GRADES_MAP: Record<string, GradeInfo> = {
+const SAMPLE_DEMO_GRADES_MAP: Record<string, GradeInfo> = {
   IC101: { grade: 7, statusText: 'Aprobado', origin: 'Examen' },
   IC102: { grade: 8, statusText: 'Aprobado', origin: 'Examen' },
   IC103: { grade: 9, statusText: 'Aprobado', origin: 'Examen' },
@@ -553,29 +555,42 @@ const INITIAL_GRADES_MAP: Record<string, GradeInfo> = {
 };
 
 export default function App() {
-  // Estado de materias
+  // Nombre del estudiante (opcional y personalizable para cualquier usuario)
+  const [studentName, setStudentName] = useState<string>(() => {
+    try {
+      return localStorage.getItem('ing_comp_student_name') || '';
+    } catch {
+      return '';
+    }
+  });
+
+  // Estado de materias (inicialmente limpio para cualquier estudiante nuevo)
   const [statusMap, setStatusMap] = useState<Record<string, SubjectStatus>>(() => {
     try {
-      const saved = localStorage.getItem('ing_comp_2018_progress_v3');
+      const saved = localStorage.getItem('ing_comp_progress');
       if (saved) return JSON.parse(saved);
-      return INITIAL_STATUS_MAP;
+      return {};
     } catch {
-      return INITIAL_STATUS_MAP;
+      return {};
     }
   });
 
-  // Notas y calificaciones
+  // Notas y calificaciones (inicialmente limpio)
   const [gradesMap, setGradesMap] = useState<Record<string, GradeInfo>>(() => {
     try {
-      const saved = localStorage.getItem('ing_comp_2018_grades_v3');
+      const saved = localStorage.getItem('ing_comp_grades');
       if (saved) return JSON.parse(saved);
-      return INITIAL_GRADES_MAP;
+      return {};
     } catch {
-      return INITIAL_GRADES_MAP;
+      return {};
     }
   });
 
-  const [selectedId, setSelectedId] = useState<string | null>('IC312');
+  // Materia seleccionada (inicialmente null para vista completa)
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // Modal para confirmar limpieza total
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [collapsedYears, setCollapsedYears] = useState<number[]>(() => {
     try {
       const saved = localStorage.getItem('ing_comp_collapsed_years');
@@ -650,7 +665,15 @@ export default function App() {
   // Guardar en localStorage
   useEffect(() => {
     try {
-      localStorage.setItem('ing_comp_2018_progress_v3', JSON.stringify(statusMap));
+      localStorage.setItem('ing_comp_student_name', studentName);
+    } catch (e) {
+      console.error(e);
+    }
+  }, [studentName]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('ing_comp_progress', JSON.stringify(statusMap));
     } catch (e) {
       console.error(e);
     }
@@ -658,7 +681,7 @@ export default function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('ing_comp_2018_grades_v3', JSON.stringify(gradesMap));
+      localStorage.setItem('ing_comp_grades', JSON.stringify(gradesMap));
     } catch (e) {
       console.error(e);
     }
@@ -751,7 +774,7 @@ export default function App() {
     setDirectStatus(id, next);
   };
 
-  // Actualizar nota de una materia
+  // Actualizar nota de una materia (y si es >= 4, marcar aprobada automáticamente si estaba pendiente)
   const updateGrade = (id: string, grade?: number, statusText?: string, origin?: string) => {
     setGradesMap((prev) => {
       const current = prev[id] || { statusText: 'Aprobado', origin: 'Examen' };
@@ -765,12 +788,26 @@ export default function App() {
         },
       };
     });
+
+    if (grade !== undefined && grade >= 4 && getSubjectStatus(id) === 'pendiente') {
+      setDirectStatus(id, 'aprobada');
+    }
   };
 
-  // Restablecer al analítico real de Tomás
-  const resetToOfficialTranscript = () => {
-    setStatusMap(INITIAL_STATUS_MAP);
-    setGradesMap(INITIAL_GRADES_MAP);
+  // Limpiar todos los datos para empezar de cero
+  const clearAllData = () => {
+    setStatusMap({});
+    setGradesMap({});
+    setCollapsedYears([]);
+    setSelectedId(null);
+    setShowResetConfirm(false);
+  };
+
+  // Cargar plantilla de datos de ejemplo
+  const loadSampleData = () => {
+    setStatusMap(SAMPLE_DEMO_STATUS_MAP);
+    setGradesMap(SAMPLE_DEMO_GRADES_MAP);
+    setShowResetConfirm(false);
   };
 
   // Estadísticas globales y cálculo de promedio
@@ -1052,7 +1089,7 @@ export default function App() {
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-lg md:text-xl font-bold tracking-tight text-white">
-                    Ingeniería en Computación
+                    {studentName ? `Plan de ${studentName}` : 'Ingeniería en Computación'}
                   </h1>
                   <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
                     Plan 2018
@@ -1064,6 +1101,28 @@ export default function App() {
               </div>
             </div>
 
+            {/* Campo de Nombre del Estudiante (Desktop) */}
+            <div className="hidden md:flex items-center gap-2 bg-slate-950/70 border border-slate-800 rounded-xl px-2.5 py-1.5 focus-within:border-indigo-500 transition ml-4">
+              <User className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+              <input
+                type="text"
+                placeholder="Ingresá tu nombre..."
+                value={studentName}
+                onChange={(e) => setStudentName(e.target.value)}
+                className="bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none w-32 md:w-36 font-medium"
+                title="Personalizá la página con tu nombre"
+              />
+              {studentName && (
+                <button
+                  onClick={() => setStudentName('')}
+                  className="text-slate-500 hover:text-slate-300 text-[10px]"
+                  title="Borrar nombre"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
             {/* Botones de acción móvil */}
             <div className="flex items-center gap-2 xl:hidden">
               <button
@@ -1071,7 +1130,7 @@ export default function App() {
                 className="px-2.5 py-1.5 rounded-lg bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 text-xs font-semibold flex items-center gap-1.5"
               >
                 <Award className="w-3.5 h-3.5" />
-                <span>⭐ {stats.average}</span>
+                <span>{stats.countGrades > 0 ? `⭐ ${stats.average}` : 'Notas'}</span>
               </button>
               <button
                 onClick={() => setShowStrategyModal(true)}
@@ -1129,12 +1188,12 @@ export default function App() {
             <button
               onClick={() => setShowGradesModal(true)}
               className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs flex items-center gap-2 shadow-lg shadow-emerald-600/25 transition transform active:scale-95"
-              title="Abrir historial de notas y calificaciones reales"
+              title="Abrir historial de notas y cargar tus calificaciones"
             >
               <Award className="w-4 h-4 text-emerald-200" />
               <span>Mis Notas & Analítico</span>
               <span className="px-1.5 py-0.5 rounded-md bg-white/20 text-white font-mono text-[11px] font-bold">
-                ⭐ {stats.average}
+                {stats.countGrades > 0 ? `⭐ ${stats.average}` : 'Cargar'}
               </span>
             </button>
 
@@ -1268,12 +1327,12 @@ export default function App() {
             </label>
 
             <button
-              onClick={resetToOfficialTranscript}
-              className="text-[11px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1 underline underline-offset-2"
-              title="Restaura las notas y avance real de Tomás"
+              onClick={() => setShowResetConfirm(true)}
+              className="text-[11px] text-rose-400 hover:text-rose-300 flex items-center gap-1 hover:underline ml-1 font-medium"
+              title="Limpiar y reiniciar todo el avance para empezar desde cero"
             >
-              <RotateCcw className="w-3 h-3" />
-              Restablecer mis notas
+              <Trash2 className="w-3 h-3" />
+              Limpiar Avance
             </button>
           </div>
         </div>
@@ -1917,9 +1976,20 @@ export default function App() {
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
                     Historial Académico y Registro de Calificaciones
                   </h3>
-                  <p className="text-xs text-slate-400">
-                    Ingeniería en Computación • Plan 2018
-                  </p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs text-slate-400">Ingeniería en Computación • Plan 2018</span>
+                    <span className="text-slate-600">•</span>
+                    <div className="flex items-center gap-1.5 bg-slate-950/60 px-2 py-0.5 rounded border border-slate-700">
+                      <User className="w-3 h-3 text-indigo-400" />
+                      <input
+                        type="text"
+                        placeholder="Tu nombre..."
+                        value={studentName}
+                        onChange={(e) => setStudentName(e.target.value)}
+                        className="bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none w-32 font-medium"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1928,6 +1998,23 @@ export default function App() {
                 className="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition"
               >
                 <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Banner de Ayuda para cualquier alumno */}
+            <div className="bg-indigo-950/40 border-b border-indigo-500/20 px-5 py-2.5 flex items-center justify-between text-xs text-indigo-200">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-indigo-400 shrink-0" />
+                <span>
+                  Ingresá tus notas y condición. Al ingresar una nota (4 al 10), la materia se marca aprobada y tu promedio se calcula al instante.
+                </span>
+              </div>
+              <button
+                onClick={loadSampleData}
+                className="shrink-0 ml-3 text-[11px] text-cyan-300 hover:text-cyan-200 underline font-medium"
+                title="Cargar datos de ejemplo de 3° año"
+              >
+                Cargar plantilla de ejemplo
               </button>
             </div>
 
@@ -2012,13 +2099,18 @@ export default function App() {
                             {s.year <= 5 ? `${s.year}° Año` : 'Optativa'} • {s.period}
                           </td>
                           <td className="py-2 px-3">
-                            <span
-                              className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
-                                getStatusBadge(st).classes
-                              }`}
+                            <select
+                              value={st}
+                              onChange={(e) => setDirectStatus(s.id, e.target.value as SubjectStatus)}
+                              className={`bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-[11px] font-semibold focus:outline-none focus:border-indigo-500 ${getStatusBadge(st).classes}`}
                             >
-                              {getStatusBadge(st).label}
-                            </span>
+                              <option value="pendiente">Pendiente</option>
+                              <option value="en_curso">En Curso</option>
+                              <option value="condicional">Condicional</option>
+                              <option value="regularizada">Regular</option>
+                              <option value="aprobada">Aprobada</option>
+                              <option value="libre">Libre</option>
+                            </select>
                           </td>
                           <td className="py-2 px-3">
                             <input
@@ -2035,9 +2127,18 @@ export default function App() {
                             />
                           </td>
                           <td className="py-2 px-3 text-slate-300">
-                            <span className="px-2 py-0.5 rounded bg-slate-800 text-[11px]">
-                              {gr?.origin || (isApproved ? 'Examen' : '-')}
-                            </span>
+                            <select
+                              value={gr?.origin || (isApproved ? 'Examen' : '-')}
+                              onChange={(e) => updateGrade(s.id, undefined, undefined, e.target.value)}
+                              className="bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-[11px] text-slate-300 focus:outline-none focus:border-indigo-500"
+                            >
+                              <option value="-">-</option>
+                              <option value="Examen">Examen</option>
+                              <option value="Promoción">Promoción</option>
+                              <option value="Regularidad">Regularidad</option>
+                              <option value="En Curso">En Curso</option>
+                              <option value="Equivalencia">Equivalencia</option>
+                            </select>
                           </td>
                         </tr>
                       );
@@ -2049,19 +2150,29 @@ export default function App() {
 
             {/* Footer con Acciones */}
             <div className="p-4 bg-slate-950/80 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
-              <button
-                onClick={resetToOfficialTranscript}
-                className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 underline"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                Restablecer notas originales de Tomás
-              </button>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setShowResetConfirm(true)}
+                  className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1.5 hover:underline font-medium"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Limpiar todas las notas y avance
+                </button>
+                <button
+                  onClick={loadSampleData}
+                  className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 hover:underline"
+                  title="Carga una plantilla de ejemplo para ver cómo funciona"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Cargar plantilla de ejemplo
+                </button>
+              </div>
 
               <button
                 onClick={() => setShowGradesModal(false)}
                 className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md transition"
               >
-                Cerrar Ventana
+                Guardar y Cerrar
               </button>
             </div>
           </div>
@@ -2289,6 +2400,44 @@ export default function App() {
                 className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition"
               >
                 Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ============================================================ */}
+      {/* MODAL 4: CONFIRMACIÓN PARA REINICIAR / LIMPIAR TODO */}
+      {/* ============================================================ */}
+      {showResetConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">¿Reiniciar todo el avance?</h3>
+                <p className="text-xs text-slate-400">Esta acción dejará el mapa en blanco.</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Se restablecerán todas las materias a estado <strong>Pendiente</strong> y se borrarán todas las notas cargadas para que comiences desde cero con tu propio plan.
+            </p>
+
+            <div className="pt-2 flex items-center justify-end gap-2">
+              <button
+                onClick={() => setShowResetConfirm(false)}
+                className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={clearAllData}
+                className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold transition flex items-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Sí, Limpiar Todo
               </button>
             </div>
           </div>
